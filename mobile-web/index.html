@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MenMade - Squad Challenges & Brotherhood</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="overflow-x-hidden w-full">
+        <!-- Premium Floating Navigation -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="logo">
+                    <svg class="logo-mark" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 8L28 14V26L20 32L12 26V14L20 8Z" stroke="url(#gradient)" stroke-width="2" fill="none"/>
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#ff6b1a;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#ffa336;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span class="logo-text">MenMade</span>
+                </div>
+                <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="#impact">Impact</a></li>
+                    <li><a href="#how" class="nav-link-special">How It Works</a></li>
+                    <li><a href="#start" class="btn btn-nav">Start Now</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Hero Section: Cinematic Center -->
+        <section class="hero">
+            <div class="hero-container">
+                <!-- Ambient Background -->
+                <div class="hero-ambient">
+                    <div class="ambient-gradient"></div>
+                    <div class="ambient-mesh"></div>
+                </div>
+                
+                <div class="hero-content">
+                    <div class="hero-badge">Stop failing alone. Start crushing together.</div>
+                    
+                    <h1 class="hero-title">
+                        Your gym bro's
+                        <span class="accent-text">finally got your back</span>
+                    </h1>
+                    
+                    <p class="hero-lead">Tired of "motivational" apps? Join squads of real men who roast you mercilessly when you fail, celebrate loudly when you win, and actually show up. No participation trophies. No BS. Just brotherhood.</p>
+                    
+                    <div class="hero-actions">
+                        <button class="btn btn-primary btn-lg" id="startNow">
+                            <span>Form Your Squad Now</span>
+                            <svg class="btn-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M7.5 10H12.5M12.5 10L10 7.5M12.5 10L10 12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                        <button class="btn btn-outline">
+                            <svg class="btn-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M10 5V10L13.5 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                            <span>See What You're Missing</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bento Grid: Impact Section -->
+        <section id="impact" class="impact">
+            <div class="impact-container">
+                <div class="section-intro">
+                    <h2>Why Real Men Choose MenMade</h2>
+                    <p>Because your motivational playlist isn't cutting it anymore.</p>
+                </div>
+
+                <div class="impact-grid">
+                    <!-- Large Feature Card -->
+                    <div class="impact-card impact-card-lg">
+                        <div class="card-header">
+                            <h3>Real Accountability (That Actually Works)</h3>
+                        </div>
+                        <p>Your group chat roasts you when you miss a challenge. You can't text your way out of it. Real men + real stakes = results you can't ignore.</p>
+                        <div class="card-visual">
+                            <svg viewBox="0 0 280 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="40" y="30" width="60" height="140" fill="rgba(255,107,26,0.1)" stroke="rgba(255,107,26,0.3)" stroke-width="2" rx="4"/>
+                                <rect x="110" y="50" width="60" height="120" fill="rgba(255,107,26,0.2)" stroke="rgba(255,107,26,0.4)" stroke-width="2" rx="4"/>
+                                <rect x="180" y="20" width="60" height="150" fill="rgba(255,107,26,0.3)" stroke="rgba(255,107,26,0.5)" stroke-width="2" rx="4"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Medium Cards -->
+                    <div class="impact-card">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L15.09 8.26H22L17.46 12.52L19.54 18.78L12 14.3L4.46 18.78L6.54 12.52L2 8.26H8.91L12 2Z" fill="url(#grad1)" stroke="url(#grad1)" stroke-width="0.5"/>
+                                <defs>
+                                    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#ff6b1a;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#ffa336;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <h3>Status Doesn't Lie</h3>
+                        <p>Prove it. Every challenge completed publicly. No hiding—your squad sees everything.</p>
+                    </div>
+
+                    <div class="impact-card">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" fill="url(#grad2)"/>
+                                <defs>
+                                    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#ff6b1a;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#ffa336;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <h3>Watch Each Other Win</h3>
+                        <p>Real-time progress. Real celebrations. Real proof that you're not just talking about it.</p>
+                    </div>
+
+                    <div class="impact-card">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="8" r="4" fill="url(#grad3)" stroke="url(#grad3)" stroke-width="0.5"/>
+                                <path d="M12 14C7.58 14 4 16.24 4 19V22H20V19C20 16.24 16.42 14 12 14Z" fill="url(#grad3)" stroke="url(#grad3)" stroke-width="0.5"/>
+                                <defs>
+                                    <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#ff6b1a;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#ffa336;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <h3>Find Your People</h3>
+                        <p>Not a support group. Not therapy. Just men doing hard shit together.</p>
+                    </div>
+
+                    <!-- Bottom Feature Card -->
+                    <div class="impact-card impact-card-full">
+                        <div class="card-header">
+                            <h3>The Group Chat That Matters</h3>
+                        </div>
+                        <p>Memes. Roasting. Support when it counts. This is where the real brotherhood happens—inside jokes your therapist will never understand.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works: Scroll Reveal Section -->
+        <section id="how" class="how-it-works">
+            <div class="how-container">
+                <div class="section-intro">
+                    <h2>3 Steps to Stop Failing Alone</h2>
+                    <p>It's stupid simple. Actually do it.</p>
+                </div>
+
+                <div class="steps-wrapper">
+                    <div class="step-item" data-step="1">
+                        <div class="step-circle">
+                            <span class="step-number">01</span>
+                        </div>
+                        <div class="step-content">
+                            <h3>Recruit 3-8 Bros</h3>
+                            <p>Grab men who won't quit on you. Loyalty over comfort. Squad size matters—too small and you lose momentum, too big and you're just another group chat.</p>
+                        </div>
+                    </div>
+
+                    <div class="step-divider"></div>
+
+                    <div class="step-item" data-step="2">
+                        <div class="step-circle">
+                            <span class="step-number">02</span>
+                        </div>
+                        <div class="step-content">
+                            <h3>Pick Your Battlefield</h3>
+                            <p>Health. Skills. Projects. Money. Pick a challenge that scares you a little. If it's comfortable, you're not growing.</p>
+                        </div>
+                    </div>
+
+                    <div class="step-divider"></div>
+
+                    <div class="step-item" data-step="3">
+                        <div class="step-circle">
+                            <span class="step-number">03</span>
+                        </div>
+                        <div class="step-content">
+                            <h3>Do The Work. Watch Magic Happen.</h3>
+                            <p>Track it. Share it. Celebrate it. Miss it? They'll roast you. Complete it? They'll celebrate harder than you will.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Social Proof: Stats Section -->
+        <section class="social-proof">
+            <div class="proof-container">
+                <div class="proof-stat">
+                    <div class="stat-number">50K+</div>
+                    <div class="stat-label">Men Active</div>
+                </div>
+                <div class="proof-stat">
+                    <div class="stat-number">12.5K+</div>
+                    <div class="stat-label">Squads Formed</div>
+                </div>
+                <div class="proof-stat">
+                    <div class="stat-number">500K+</div>
+                    <div class="stat-label">Challenges Crushed</div>
+                </div>
+                <div class="proof-stat">
+                    <div class="stat-number">4.9★</div>
+                    <div class="stat-label">App Rating</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA: Final Action -->
+        <section id="start" class="final-cta">
+            <div class="cta-container">
+                <h2 class="cta-title">Stop Being Alone in This</h2>
+                <p class="cta-subtitle">Your next chapter starts now. Grab your squad.</p>
+                
+                <div class="cta-actions">
+                    <button class="btn btn-primary btn-lg">
+                        <span>Build Your Squad Today</span>
+                        <svg class="btn-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 2V14M10 14L6 10M10 14L14 10M2 18H18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="platform-badges">
+                    <span>iOS</span>
+                    <span>Android</span>
+                    <span>Web</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-container">
+                <div class="footer-content">
+                    <div class="footer-col">
+                        <div class="footer-logo">MenMade</div>
+                        <p>No motivational posters. No self-help nonsense. Just men, squads, and the results that prove it.</p>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Product</h4>
+                        <ul>
+                            <li><a href="#">Features</a></li>
+                            <li><a href="#">Pricing</a></li>
+                            <li><a href="#">Download</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Company</h4>
+                        <ul>
+                            <li><a href="#">About</a></li>
+                            <li><a href="#">Blog</a></li>
+                            <li><a href="#">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Legal</h4>
+                        <ul>
+                            <li><a href="#">Privacy</a></li>
+                            <li><a href="#">Terms</a></li>
+                            <li><a href="#">Cookies</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2026 MenMade. Stop scrolling. Start crushing.</p>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
