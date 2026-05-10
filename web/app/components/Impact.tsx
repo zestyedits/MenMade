@@ -16,7 +16,7 @@ const cardShadow = {
 
 export function Impact() {
   return (
-    <section id="impact" className="relative py-24 md:py-32">
+    <section id="impact" className="relative py-20 md:py-24">
       <div className="mx-auto max-w-[1400px] px-5 md:px-10">
         {/* Editorial intro — left-aligned, asymmetric */}
         <div className="grid grid-cols-12 items-end gap-x-6 gap-y-6">
@@ -40,15 +40,15 @@ export function Impact() {
           </div>
         </div>
 
-        {/* Bento grid — pristine gapless rhythm, asymmetric (8/4 row, 4/4/4 row, full-width) */}
-        <div className="mt-14 grid grid-cols-12 gap-4 md:gap-5">
+        {/* Bento grid — pristine gapless rhythm, asymmetric (8/4 row, 4/4/4 row) */}
+        <div className="mt-10 grid grid-cols-12 gap-4 md:gap-5">
           {/* Large hero card with embedded image — image-led storytelling */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className={`${card} col-span-12 md:col-span-8 md:row-span-2 min-h-[460px] md:min-h-[640px]`}
+            className={`${card} col-span-12 md:col-span-8 md:row-span-2 min-h-[400px] md:min-h-[520px]`}
             style={cardShadow}
           >
             <div className="absolute inset-0">
@@ -197,50 +197,6 @@ export function Impact() {
             </div>
           </motion.div>
 
-          {/* Wide bottom card — group of three vertical rhythm lines (no card overload) */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="col-span-12 grid grid-cols-1 gap-0 rounded-[var(--radius-tile)] border border-white/[0.06] bg-ink-900/40 backdrop-blur-md md:grid-cols-3"
-            style={cardShadow}
-          >
-            {[
-              {
-                k: "Before",
-                v: "Solo grind, no witnesses",
-                d: "Phone-only goals. Streaks die quietly. No one notices the relapse on a Tuesday.",
-              },
-              {
-                k: "After",
-                v: "Six men, one ledger",
-                d: "Daily proof. A squad chat that roasts a missed lift the same way it cheers a finished marathon.",
-              },
-              {
-                k: "Outcome",
-                v: "Things actually finish",
-                d: "Median squad closes 87% of stated challenges in the first cycle. The rest is pace.",
-              },
-            ].map((row, i) => (
-              <div
-                key={row.k}
-                className={`flex flex-col gap-3 p-7 md:p-9 ${
-                  i > 0 ? "md:border-l border-white/[0.06]" : ""
-                } ${i > 0 && "border-t md:border-t-0"}`}
-              >
-                <div className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-ember-400/85">
-                  {row.k}
-                </div>
-                <div className="text-[20px] font-medium leading-snug tracking-[-0.015em] text-bone">
-                  {row.v}
-                </div>
-                <p className="text-[13.5px] leading-relaxed text-ink-200/80">
-                  {row.d}
-                </p>
-              </div>
-            ))}
-          </motion.div>
         </div>
       </div>
     </section>

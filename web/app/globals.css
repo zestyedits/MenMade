@@ -51,6 +51,22 @@ html, body {
   text-rendering: optimizeLegibility;
 }
 
+/* Smooth in-page anchor scrolling — disabled when the user prefers
+   reduced motion. Sections also get scroll-margin-top so they don't
+   land hidden behind the sticky navbar (h-16 = 64px + breathing). */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+[id="tour"],
+[id="impact"],
+[id="proof"],
+[id="pricing"] {
+  scroll-margin-top: 96px;
+}
+
 body {
   font-feature-settings: "ss01", "cv11";
 }
@@ -98,6 +114,131 @@ body {
 /* Tactile feedback */
 .tactile { transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1); }
 .tactile:active { transform: translateY(1px) scale(0.985); }
+
+/* Legal / long-form prose used on /terms and /privacy */
+.legal-prose { color: rgb(231 229 228 / 0.85); }
+.legal-prose h2 {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 1.125rem;
+  letter-spacing: 0.02em;
+  color: var(--color-bone);
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgb(255 255 255 / 0.06);
+}
+.legal-prose h2:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+.legal-prose h3 {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  color: var(--color-bone);
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+.legal-prose .summary {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: rgb(239 123 53 / 0.85);
+  margin-bottom: 0.75rem;
+}
+.legal-prose p { font-size: 0.95rem; line-height: 1.7; margin-bottom: 1rem; max-width: 70ch; }
+.legal-prose ul { list-style: none; padding-left: 0; margin-bottom: 1rem; }
+.legal-prose ul li { position: relative; padding-left: 1.25rem; line-height: 1.7; margin-bottom: 0.5rem; font-size: 0.95rem; }
+.legal-prose ul li::before { content: "—"; position: absolute; left: 0; color: rgb(239 123 53 / 0.7); }
+.legal-prose a { color: var(--color-bone); text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgb(236 231 220 / 0.4); }
+.legal-prose a:hover { text-decoration-color: var(--color-bone); }
+.legal-prose code { font-family: var(--font-mono); font-size: 0.85em; background: rgb(255 255 255 / 0.05); padding: 0.1rem 0.35rem; border-radius: 2px; }
+.legal-prose .placeholder {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: rgb(239 123 53 / 0.85);
+  border-left: 2px solid rgb(239 123 53 / 0.6);
+  padding: 0.5rem 0.75rem;
+  background: rgb(239 123 53 / 0.06);
+  margin: 0.75rem 0 1rem;
+}
+
+/* Chat surface palette — a warmer mid-dark notebook tone that lifts off
+   the ink-950 ground so type hierarchy reads. Used only on /chat. */
+:root {
+  --chat-paper: #1e1a17;
+  --chat-paper-raised: #25201c;
+  --chat-paper-mine: rgba(239, 123, 53, 0.06);
+  --chat-rule: rgba(255, 255, 255, 0.07);
+  --chat-rule-strong: rgba(255, 255, 255, 0.12);
+}
+
+.chat-paper { background: var(--chat-paper); }
+.chat-paper-raised { background: var(--chat-paper-raised); }
+.chat-paper-mine { background: var(--chat-paper-mine); }
+
+/* A faint warm radial behind the message stream — gives the surface
+   life without lighting up the whole page. */
+.chat-stream {
+  background:
+    radial-gradient(80% 60% at 50% 0%, rgba(239, 123, 53, 0.04) 0%, transparent 55%),
+    var(--chat-paper);
+}
+
+.chat-rule { background: var(--chat-rule); height: 1px; }
+.chat-rule-strong { background: var(--chat-rule-strong); height: 1px; }
+.chat-rule-ember {
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgb(239 123 53 / 0.55) 30%,
+    rgb(239 123 53 / 0.55) 70%,
+    transparent 100%);
+}
+
+/* Stamp animations — applied to the icon inside .stamp-card */
+@keyframes stamp-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.85; }
+}
+@keyframes stamp-shake {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  20% { transform: translateX(-2px) rotate(-2deg); }
+  40% { transform: translateX(2px) rotate(2deg); }
+  60% { transform: translateX(-1px) rotate(-1deg); }
+  80% { transform: translateX(1px) rotate(1deg); }
+}
+@keyframes stamp-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+@keyframes stamp-blink {
+  0%, 90%, 100% { transform: scaleY(1); }
+  92%, 96% { transform: scaleY(0.1); }
+}
+@keyframes stamp-spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.stamp-anim-pulse { animation: stamp-pulse 2.4s ease-in-out infinite; }
+.stamp-anim-shake { animation: stamp-shake 4s ease-in-out infinite; }
+.stamp-anim-breathe { animation: stamp-breathe 3s ease-in-out infinite; }
+.stamp-anim-blink { animation: stamp-blink 5s linear infinite; transform-origin: center; }
+.stamp-anim-spin-slow { animation: stamp-spin-slow 14s linear infinite; }
+
+/* Native emoji rendering — prefer the system emoji font so iOS/macOS
+   users see Apple Color Emoji, others see their system set. */
+.emoji {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji",
+    "Twemoji Mozilla", "EmojiOne Color", sans-serif;
+  font-feature-settings: normal;
+  font-variant: normal;
+}
 
 /* Reduce motion */
 @media (prefers-reduced-motion: reduce) {

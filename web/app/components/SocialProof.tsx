@@ -36,7 +36,7 @@ const testimonials = [
 
 export function SocialProof() {
   return (
-    <section id="proof" className="relative bg-ink-950 py-24 md:py-32">
+    <section id="proof" className="relative bg-ink-950 py-20 md:py-24">
       <div className="mx-auto max-w-[1400px] px-5 md:px-10">
         <div className="grid grid-cols-12 items-end gap-x-6 gap-y-6">
           <div className="col-span-12 md:col-span-7">
@@ -58,7 +58,7 @@ export function SocialProof() {
         </div>
 
         {/* Asymmetric quote layout — large lead quote + 3 supporting quotes (no 3-column slop) */}
-        <div className="mt-14 grid grid-cols-12 gap-4 md:gap-5">
+        <div className="mt-10 grid grid-cols-12 gap-4 md:gap-5">
           <motion.figure
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -151,7 +151,7 @@ export function SocialProof() {
         </div>
 
         {/* Numeric strip — organic numbers, no fake 99% */}
-        <div className="mt-16 grid grid-cols-2 gap-x-6 gap-y-8 border-t border-white/[0.06] pt-10 md:grid-cols-4">
+        <div className="mt-12 grid grid-cols-2 gap-x-6 gap-y-6 border-t border-white/[0.06] pt-8 md:grid-cols-4">
           {[
             ["47,238", "Active members"],
             ["12,847", "Squads in cycle"],

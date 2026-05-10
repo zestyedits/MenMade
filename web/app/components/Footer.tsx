@@ -1,13 +1,14 @@
 import Link from "next/link";
+import { Logo } from "./ui/Logo";
 
 const cols = [
   {
     title: "Product",
     links: [
       ["The case", "#impact"],
-      ["How it works", "#how"],
+      ["How it works", "#tour"],
+      ["Pricing", "/pricing"],
       ["Squads", "#proof"],
-      ["Field log", "#"],
     ],
   },
   {
@@ -15,15 +16,15 @@ const cols = [
     links: [
       ["About", "#"],
       ["Manifesto", "#"],
-      ["Press", "#"],
+      ["Contact", "/contact"],
     ],
   },
   {
     title: "Legal",
     links: [
-      ["Privacy", "#"],
-      ["Terms", "#"],
-      ["Cookies", "#"],
+      ["Privacy", "/privacy"],
+      ["Terms", "/terms"],
+      ["Contact", "/contact"],
     ],
   },
 ];
@@ -34,18 +35,7 @@ export function Footer() {
       <div className="mx-auto max-w-[1400px] px-5 md:px-10">
         <div className="grid grid-cols-12 gap-y-12 gap-x-6">
           <div className="col-span-12 md:col-span-6">
-            <Link href="/" className="inline-flex items-center gap-2.5">
-              <span className="relative grid h-8 w-8 place-items-center">
-                <span className="absolute inset-0 rounded-[10px] border border-white/15" />
-                <span className="absolute inset-[3px] rounded-[6px] bg-gradient-to-br from-ember-400/90 to-ember-700/70" />
-                <span className="relative font-mono text-[11px] font-semibold text-ink-950">
-                  M
-                </span>
-              </span>
-              <span className="text-[16px] font-medium tracking-tight">
-                MenMade
-              </span>
-            </Link>
+            <Logo size="md" />
 
             <p className="mt-6 max-w-[44ch] text-[14px] leading-relaxed text-ink-200/75">
               A private squad app for men who&rsquo;d rather finish a real
