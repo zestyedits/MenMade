@@ -7,20 +7,36 @@ import { ArrowRight, AppleLogo, GoogleLogo } from "@phosphor-icons/react/dist/ss
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { MonoLabel } from "../../components/ui/MonoLabel";
-import { signIn } from "../../lib/auth";
+import { signUpWithPassword } from "../../lib/auth";
 
-type Errors = { name?: string; email?: string; password?: string };
+type Errors = {
+  name?: string;
+  email?: string;
+  password?: string;
+  general?: string;
+};
 
 export default function SignUpPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // Honeypot — visually hidden, not autofilled by password managers
+  // (no autocomplete attribute), bots that fill every field trip it.
+  const [website, setWebsite] = useState("");
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    // Honeypot trip: silently succeed (don't tell bots they were caught).
+    if (website.trim().length > 0) {
+      setSubmitting(true);
+      setTimeout(() => router.push("/onboarding"), 600);
+      return;
+    }
+
     const next: Errors = {};
     if (!name.trim()) next.name = "Required.";
     if (!email.trim()) next.email = "Required.";
@@ -33,21 +49,30 @@ export default function SignUpPage() {
     if (Object.keys(next).length > 0) return;
 
     setSubmitting(true);
-    setTimeout(() => {
-      signIn({ email, name });
-      router.push("/onboarding");
-    }, 360);
+    const result = await signUpWithPassword(email, password, name);
+    if (!result.ok) {
+      setErrors({ general: result.error });
+      setSubmitting(false);
+      return;
+    }
+    // With email confirmation ON in Supabase, there's no session yet —
+    // route to sign-in with a banner. If confirmation is off, the user
+    // has a session immediately, send them straight into onboarding.
+    if (result.needsEmailConfirmation) {
+      router.push(
+        `/auth/sign-in?confirm=email&to=${encodeURIComponent(email)}`,
+      );
+      return;
+    }
+    router.push("/onboarding");
   }
 
   function handleProvider(provider: "apple" | "google") {
-    setSubmitting(true);
-    setTimeout(() => {
-      signIn({
-        email: `new-operative@${provider}.local`,
-        name: provider === "apple" ? "Apple Operative" : "Google Operative",
-      });
-      router.push("/onboarding");
-    }, 240);
+    setErrors({
+      general: `${
+        provider === "apple" ? "Apple" : "Google"
+      } sign-in is coming with the native app. Use email for now.`,
+    });
   }
 
   return (
@@ -92,6 +117,40 @@ export default function SignUpPage() {
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+        {/* Honeypot: hidden from humans + AT, irresistible to dumb bots. */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: "-9999px",
+            width: "1px",
+            height: "1px",
+            overflow: "hidden",
+          }}
+        >
+          <label htmlFor="website-url">
+            Website (leave blank)
+            <input
+              id="website-url"
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+            />
+          </label>
+        </div>
+
+        {errors.general ? (
+          <div
+            role="alert"
+            className="border border-ember-400/60 bg-ember-400/[0.06] px-3 py-2 font-mono text-[11px] uppercase tracking-[0.18em] text-ember-400"
+          >
+            {errors.general}
+          </div>
+        ) : null}
+
         <Input
           label="Name"
           type="text"

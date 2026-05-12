@@ -5,6 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ChatCircle,
+  Compass,
+  ListBullets,
+  UsersThree,
   SignOut,
   CaretDown,
   GearSix,
@@ -18,6 +21,9 @@ import { signOut, type Session } from "../lib/auth";
 // option online in both the desktop top nav and the mobile bottom nav.
 const navOptions = [
   { href: "/chat", label: "Chat", Icon: ChatCircle },
+  { href: "/squad", label: "Squad", Icon: UsersThree },
+  { href: "/cycles", label: "Cycles", Icon: Compass },
+  { href: "/field-log/new", label: "Log", Icon: ListBullets },
 ];
 
 export function DashboardChrome({
@@ -31,8 +37,8 @@ export function DashboardChrome({
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  function handleSignOut() {
-    signOut();
+  async function handleSignOut() {
+    await signOut();
     router.replace("/auth/sign-in");
   }
 

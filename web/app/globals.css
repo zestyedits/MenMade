@@ -175,7 +175,17 @@ body {
   --chat-paper-mine: rgba(239, 123, 53, 0.06);
   --chat-rule: rgba(255, 255, 255, 0.07);
   --chat-rule-strong: rgba(255, 255, 255, 0.12);
+
+  /* Squad detail surface palette — three warm dark altitudes so hero,
+     sticky tab bar, and tab body read as separate horizontal slabs. */
+  --squad-paper: #15110e;
+  --squad-paper-raised: #1b1612;
+  --squad-paper-card: #221b16;
 }
+
+.squad-paper { background: var(--squad-paper); }
+.squad-paper-raised { background: var(--squad-paper-raised); }
+.squad-paper-card { background: var(--squad-paper-card); }
 
 .chat-paper { background: var(--chat-paper); }
 .chat-paper-raised { background: var(--chat-paper-raised); }

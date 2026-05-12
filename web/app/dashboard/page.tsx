@@ -32,21 +32,29 @@ export default function DashboardPage() {
   const [events, setEvents] = useState<ActivityEvent[]>(mockActivity);
 
   useEffect(() => {
-    const s = getSession();
-    if (s) setHandle(s.handle);
-    const id = store.getIdentity();
-    if (id?.handle) setHandle(id.handle);
-    const progress = store.getProgress();
-    if (progress.streak > 0) setStreak(progress.streak);
-    if (progress.lastCheckInIso) {
-      const last = new Date(progress.lastCheckInIso);
-      const today = new Date();
-      const sameDay =
-        last.getFullYear() === today.getFullYear() &&
-        last.getMonth() === today.getMonth() &&
-        last.getDate() === today.getDate();
-      if (sameDay) setCompletedToday(true);
-    }
+    let cancelled = false;
+    (async () => {
+      const s = await getSession();
+      if (cancelled) return;
+      if (s) setHandle(s.handle || s.name || "operative");
+
+      const id = store.getIdentity();
+      if (id?.handle) setHandle(id.handle);
+      const progress = store.getProgress();
+      if (progress.streak > 0) setStreak(progress.streak);
+      if (progress.lastCheckInIso) {
+        const last = new Date(progress.lastCheckInIso);
+        const today = new Date();
+        const sameDay =
+          last.getFullYear() === today.getFullYear() &&
+          last.getMonth() === today.getMonth() &&
+          last.getDate() === today.getDate();
+        if (sameDay) setCompletedToday(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Drip simulated squad activity. The interval re-randomises after each tick

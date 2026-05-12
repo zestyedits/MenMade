@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 import { Logo } from "./ui/Logo";
 
 const NAV_LINKS = [
-  { label: "How it works", href: "/#tour" },
+  { label: "How it works", href: "/how-it-works" },
   { label: "Pricing", href: "/pricing" },
   { label: "Squads", href: "/#proof" },
   { label: "Contact", href: "/contact" },

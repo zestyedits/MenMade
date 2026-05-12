@@ -15,16 +15,25 @@ export function AuthGuard({ children, requireOnboarding = true }: Props) {
   const [session, setSession] = useState<Session | null | "loading">("loading");
 
   useEffect(() => {
-    const s = getSession();
-    if (!s) {
-      router.replace("/auth/sign-in");
-      return;
-    }
-    if (requireOnboarding && !store.hasOnboarded()) {
-      router.replace("/onboarding");
-      return;
-    }
-    setSession(s);
+    let cancelled = false;
+    (async () => {
+      const s = await getSession();
+      if (cancelled) return;
+
+      if (!s) {
+        router.replace("/auth/sign-in");
+        return;
+      }
+      if (requireOnboarding && !store.hasOnboarded()) {
+        router.replace("/onboarding");
+        return;
+      }
+      setSession(s);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [router, requireOnboarding]);
 
   if (session === "loading" || session === null) {

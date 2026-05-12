@@ -47,15 +47,19 @@ function ChatBody() {
 
   // Mount: hydrate identity, blocks, COC, and seed all squad states from store.
   useEffect(() => {
-    const s = getSession();
-    const id = store.getIdentity();
-    if (id?.handle) {
-      setMyHandle(id.handle);
-      setMyName(id.displayName || s?.name || "You");
-    } else if (s) {
-      setMyHandle(s.handle);
-      setMyName(s.name);
-    }
+    let cancelled = false;
+    (async () => {
+      const s = await getSession();
+      if (cancelled) return;
+      const id = store.getIdentity();
+      if (id?.handle) {
+        setMyHandle(id.handle);
+        setMyName(id.displayName || s?.name || "You");
+      } else if (s) {
+        setMyHandle(s.handle || "you");
+        setMyName(s.name || "You");
+      }
+    })();
     setBlockedHandles(store.getBlockedHandles());
     const acked = store.hasAcknowledgedChatCOC();
     setCocAcked(acked);
@@ -70,6 +74,10 @@ function ChatBody() {
       };
     });
     setSquadStates(initial);
+
+    return () => {
+      cancelled = true;
+    };
   }, [squads]);
 
   // Persist active squad (purely for the dashboard widgets that may want it).

@@ -1,16 +1,33 @@
 "use client";
 
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
 import { ArrowUpRight, Play } from "@phosphor-icons/react/dist/ssr";
 import { MagneticButton } from "./MagneticButton";
 
 export function Hero() {
+  const ref = useRef<HTMLElement>(null);
+  // Drive scroll-keyed parallax across the hero. start=section-top hits
+  // viewport-top, end=section-bottom hits viewport-top.
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end start"],
+  });
+
+  const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "18%"]);
+  const bgScale = useTransform(scrollYProgress, [0, 1], [1, 1.08]);
+  const contentOpacity = useTransform(scrollYProgress, [0, 0.6, 1], [1, 1, 0]);
+  const contentY = useTransform(scrollYProgress, [0, 1], ["0px", "60px"]);
+
   return (
-    <section className="relative isolate overflow-hidden">
+    <section ref={ref} className="relative isolate overflow-hidden">
       {/* Full-bleed image background — taste-skill: full-bleed with tonal overlay,
           bottom-left composition anchor, NOT centered, NOT left-text/right-image. */}
-      <div className="absolute inset-0 -z-10">
+      <motion.div
+        className="absolute inset-0 -z-10"
+        style={{ y: bgY, scale: bgScale }}
+      >
         <Image
           src="/generated/hero.png"
           alt=""
@@ -36,9 +53,12 @@ export function Hero() {
               "linear-gradient(90deg, rgb(12 10 9 / 0.65) 0%, rgb(12 10 9 / 0.0) 100%)",
           }}
         />
-      </div>
+      </motion.div>
 
-      <div className="mx-auto flex min-h-[100dvh] max-w-[1400px] flex-col px-5 pt-24 md:px-10">
+      <motion.div
+        style={{ opacity: contentOpacity, y: contentY }}
+        className="mx-auto flex min-h-[100dvh] max-w-[1400px] flex-col px-5 pt-24 md:px-10"
+      >
         {/* Top instrument label — concept spine: precision instrument */}
         <div className="flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.22em] text-ink-200/60">
           <span className="h-px w-8 bg-ink-200/40" />
@@ -134,7 +154,7 @@ export function Hero() {
             </div>
           </motion.div>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

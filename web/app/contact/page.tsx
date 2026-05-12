@@ -45,7 +45,9 @@ export default function ContactPage() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, subject, body }),
+        // `website` is the honeypot. Real users never see this field
+        // (it's not in the form). Bots that POST every key will fill it.
+        body: JSON.stringify({ name, email, subject, body, website: "" }),
       });
 
       if (!res.ok) {

@@ -6,7 +6,7 @@ import { ArrowRight, SignOut, Trash, Warning } from "@phosphor-icons/react/dist/
 import { Section } from "../../components/ui/Section";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
-import { getSession, signIn, signOut } from "../../lib/auth";
+import { getSession, signOut } from "../../lib/auth";
 import { store } from "../../lib/store";
 
 export default function AccountSettingsPage() {
@@ -18,18 +18,26 @@ export default function AccountSettingsPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [confirmText, setConfirmText] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    const s = getSession();
-    const id = store.getIdentity();
-    if (s) setEmail(s.email);
-    if (id) {
-      setName(id.displayName);
-      setHandle(id.handle);
-    } else if (s) {
-      setName(s.name);
-      setHandle(s.handle);
-    }
+    let cancelled = false;
+    (async () => {
+      const s = await getSession();
+      if (cancelled) return;
+      const id = store.getIdentity();
+      if (s) setEmail(s.email);
+      if (id) {
+        setName(id.displayName);
+        setHandle(id.handle);
+      } else if (s) {
+        setName(s.name);
+        setHandle(s.handle);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   function handleSaveIdentity() {
@@ -46,23 +54,32 @@ export default function AccountSettingsPage() {
       displayName: name.trim(),
       pronouns: store.getIdentity()?.pronouns,
     });
-    const s = getSession();
-    if (s) {
-      signIn({ email: s.email, name: name.trim(), handle: handle.trim() });
-    }
+    // The store sync layer persists handle/display_name to the profiles
+    // table server-side; the supabase auth identity (email + userId) is
+    // owned by supabase.auth and doesn't change here.
     setSavedAt(Date.now());
     setTimeout(() => setSavedAt(null), 1800);
   }
 
-  function handleSignOut() {
-    signOut();
+  async function handleSignOut() {
+    await signOut();
     router.replace("/auth/sign-in");
   }
 
-  function handleDeleteAccount() {
+  async function handleDeleteAccount() {
     if (confirmText.trim().toUpperCase() !== "DELETE") return;
+    setDeleting(true);
+    try {
+      // Server-side delete first (Supabase admin API removes the user
+      // and RLS cascades clean up all user_id rows). Then wipe local
+      // cache. If the API call fails, we still wipe local + sign out
+      // so the user isn't stuck in a half-deleted state.
+      await fetch("/api/account/delete", { method: "POST" });
+    } catch {
+      // proceed regardless
+    }
     store.wipeAll();
-    signOut();
+    await signOut();
     router.replace("/");
   }
 

@@ -82,10 +82,10 @@ export default function PrivacySettingsPage() {
     window.setTimeout(() => setExported(false), 2000);
   }
 
-  function handleWipe() {
+  async function handleWipe() {
     if (confirmText.trim().toUpperCase() !== "WIPE") return;
     store.wipeAll();
-    signOut();
+    await signOut();
     router.replace("/");
   }
 

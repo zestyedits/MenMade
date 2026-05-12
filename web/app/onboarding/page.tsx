@@ -19,7 +19,7 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { MonoLabel } from "../components/ui/MonoLabel";
 import { StepShell } from "./_steps/StepShell";
-import { getSession, signIn } from "../lib/auth";
+import { getSession } from "../lib/auth";
 import {
   store,
   defaultPreferences,
@@ -115,14 +115,19 @@ export default function OnboardingPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const s = getSession();
-    if (s) {
+    let cancelled = false;
+    (async () => {
+      const s = await getSession();
+      if (cancelled || !s) return;
       setDisplayName((dn) => dn || s.name);
       setHandle((h) => h || s.handle);
-    }
+    })();
     if (typeof Intl !== "undefined") {
       setTz(Intl.DateTimeFormat().resolvedOptions().timeZone);
     }
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const canAdvance = useMemo(() => {
@@ -172,7 +177,7 @@ export default function OnboardingPage() {
     );
   }
 
-  function finish() {
+  async function finish() {
     store.setPreferences({
       focus,
       intensity,
@@ -187,15 +192,9 @@ export default function OnboardingPage() {
     });
     store.markOnboarded();
 
-    // Ensure the session reflects the chosen handle/name.
-    const session = getSession();
-    if (session) {
-      signIn({
-        email: session.email,
-        name: displayName.trim(),
-        handle: handle.trim(),
-      });
-    }
+    // Supabase session already holds the authoritative auth identity.
+    // The store sync layer persists handle/displayName to the profiles
+    // table and writes preferences/onboarded server-side.
 
     router.push("/dashboard");
   }
