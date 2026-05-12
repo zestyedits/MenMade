@@ -31,7 +31,10 @@ const cspParts: string[] = [
   `connect-src 'self' https://api.resend.com https://api.stripe.com https://checkout.stripe.com${SUPABASE_HOST ? ` https://${SUPABASE_HOST} wss://${SUPABASE_HOST}` : ""}`,
   // Stripe Checkout opens a redirected page, not a frame, but the
   // billing portal and Stripe Elements use frames for embedded UI.
-  "frame-src https://js.stripe.com https://checkout.stripe.com https://billing.stripe.com",
+  // Stripe Embedded Checkout iframes load from js.stripe.com; 3-D Secure
+  // challenges fall back to hooks.stripe.com. The billing portal is
+  // separate (we redirect to billing.stripe.com — not framed).
+  "frame-src https://js.stripe.com https://checkout.stripe.com https://hooks.stripe.com https://billing.stripe.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self' https://checkout.stripe.com",

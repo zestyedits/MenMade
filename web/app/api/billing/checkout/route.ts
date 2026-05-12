@@ -99,8 +99,10 @@ export async function POST(request: NextRequest) {
     process.env.NEXT_PUBLIC_APP_URL ??
     request.nextUrl.origin ??
     "http://localhost:3000";
-  const successUrl = `${appUrl}/settings/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`;
-  const cancelUrl = `${appUrl}/settings/billing?checkout=canceled`;
+  // Stripe Embedded Checkout returns the user to a single return_url after
+  // payment completes (success or otherwise). Stripe substitutes the
+  // {CHECKOUT_SESSION_ID} token; our return page renders the right state.
+  const returnUrl = `${appUrl}/settings/billing/return?session_id={CHECKOUT_SESSION_ID}`;
 
   // ---------- Founder's Pass branch ----------
   if (price === "founders-pass") {
@@ -164,13 +166,14 @@ export async function POST(request: NextRequest) {
       seatNumber = seatData as number;
     }
 
-    // Issue the one-time Checkout session.
+    // Issue the one-time Checkout session in EMBEDDED mode so the UI
+    // renders inside our app instead of bouncing to checkout.stripe.com.
     try {
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
+        ui_mode: "embedded",
         line_items: [{ price: getPriceId("founders-pass"), quantity: 1 }],
-        success_url: successUrl,
-        cancel_url: cancelUrl,
+        return_url: returnUrl,
         customer: existingCustomerId,
         customer_email: existingCustomerId ? undefined : (user.email ?? undefined),
         client_reference_id: user.id,
@@ -196,13 +199,17 @@ export async function POST(request: NextRequest) {
         .update({ stripe_session_id: session.id })
         .eq("seat_number", seatNumber);
 
-      if (!session.url) {
+      if (!session.client_secret) {
         return NextResponse.json(
-          { ok: false, error: "Stripe did not return a checkout URL." },
+          { ok: false, error: "Stripe did not return a client secret." },
           { status: 502 },
         );
       }
-      return NextResponse.json({ ok: true, url: session.url });
+      return NextResponse.json({
+        ok: true,
+        clientSecret: session.client_secret,
+        sessionId: session.id,
+      });
     } catch (err) {
       // Release the seat we tentatively held — payment failed before
       // we even left our server.
@@ -223,14 +230,14 @@ export async function POST(request: NextRequest) {
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
+      ui_mode: "embedded",
       line_items: [
         {
           price: getPriceId(price as "operator-monthly" | "operator-annual"),
           quantity: 1,
         },
       ],
-      success_url: successUrl,
-      cancel_url: cancelUrl,
+      return_url: returnUrl,
       customer: existingCustomerId,
       customer_email: existingCustomerId ? undefined : (user.email ?? undefined),
       client_reference_id: user.id,
@@ -247,13 +254,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (!session.url) {
+    if (!session.client_secret) {
       return NextResponse.json(
-        { ok: false, error: "Stripe did not return a checkout URL." },
+        { ok: false, error: "Stripe did not return a client secret." },
         { status: 502 },
       );
     }
-    return NextResponse.json({ ok: true, url: session.url });
+    return NextResponse.json({
+      ok: true,
+      clientSecret: session.client_secret,
+      sessionId: session.id,
+    });
   } catch (err) {
     console.error("[billing/checkout] operator session create failed:", err);
     return NextResponse.json(

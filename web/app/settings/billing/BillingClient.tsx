@@ -15,6 +15,7 @@ import {
 import Link from "next/link";
 import { Section } from "../../components/ui/Section";
 import { Button } from "../../components/ui/Button";
+import { EmbeddedCheckoutDrawer } from "./EmbeddedCheckoutDrawer";
 
 // Plan + Subscription shape kept local to this client file now that
 // settings/billing is server-fed. The store.ts types still exist for
@@ -62,6 +63,7 @@ export default function BillingClient({
   const [busyPlan, setBusyPlan] = useState<Plan | null>(null);
   const [portalBusy, setPortalBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkoutSecret, setCheckoutSecret] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   // Local alias preserves the original variable name throughout the
@@ -69,9 +71,10 @@ export default function BillingClient({
   const FOUNDER_PASS_CAP = founderCap;
 
   /**
-   * Routes the user to Stripe Checkout for the chosen plan. The
-   * response body is `{ ok, url, error? }`. We hard-navigate so
-   * Stripe owns the next page — no SPA back-button weirdness.
+   * Opens the Stripe Embedded Checkout drawer for the chosen plan.
+   * Response is `{ ok, clientSecret, sessionId, error? }`. The drawer
+   * mounts as soon as we have a clientSecret; Stripe.js renders inside
+   * an iframe sandboxed by Stripe. Errors surface as inline copy.
    */
   async function startCheckout(plan: Plan) {
     setError(null);
@@ -86,10 +89,10 @@ export default function BillingClient({
       });
       const data = (await res.json()) as {
         ok?: boolean;
-        url?: string;
+        clientSecret?: string;
         error?: string;
       };
-      if (!res.ok || !data.ok || !data.url) {
+      if (!res.ok || !data.ok || !data.clientSecret) {
         if (data.error === "sold-out") {
           setError("Founder's Pass is sold out. 500 seats, all claimed.");
         } else {
@@ -97,12 +100,16 @@ export default function BillingClient({
         }
         return;
       }
-      window.location.href = data.url;
+      setCheckoutSecret(data.clientSecret);
     } catch {
       setError("Network hiccup. Try again.");
     } finally {
       setBusyPlan(null);
     }
+  }
+
+  function closeCheckout() {
+    setCheckoutSecret(null);
   }
 
   /** Opens Stripe-hosted billing portal for plan + card management. */
@@ -152,6 +159,10 @@ export default function BillingClient({
 
   return (
     <>
+      <EmbeddedCheckoutDrawer
+        clientSecret={checkoutSecret}
+        onClose={closeCheckout}
+      />
       <Section
         kicker="01 / Active plan"
         title={PLAN_LABEL[sub.plan]}
@@ -259,7 +270,7 @@ export default function BillingClient({
                     onClick={() => applyPlan("operator-monthly")}
                   >
                     {busyPlan === "operator-monthly"
-                      ? "Routing to Stripe…"
+                      ? "Opening checkout…"
                       : "Start monthly"}
                     <ArrowRight size={13} weight="bold" />
                   </Button>
@@ -310,7 +321,7 @@ export default function BillingClient({
                     onClick={() => applyPlan("operator-annual")}
                   >
                     {busyPlan === "operator-annual"
-                      ? "Routing to Stripe…"
+                      ? "Opening checkout…"
                       : "Start annual"}
                     <ArrowRight size={13} weight="bold" />
                   </Button>
@@ -389,7 +400,7 @@ export default function BillingClient({
                   {founderRemaining <= 0
                     ? "Sold out"
                     : busyPlan === "founder"
-                      ? "Routing to Stripe…"
+                      ? "Opening checkout…"
                       : "Claim a Pass"}
                   <ArrowRight size={13} weight="bold" />
                 </Button>
@@ -403,7 +414,7 @@ export default function BillingClient({
             </p>
           ) : (
             <p className="mt-4 text-center font-mono text-[10px] uppercase tracking-[0.22em] text-ink-300/55">
-              Routes to Stripe Checkout. Apple/Google IAP arrives with the native app.
+              Secure checkout by Stripe, embedded. Apple/Google IAP arrives with the native app.
             </p>
           )}
         </Section>

@@ -4,26 +4,48 @@ import Stripe from "stripe";
  * Server-only Stripe client. NEVER import this from a Client Component
  * — it pulls the secret key into whatever bundle ends up loading it.
  *
+ * Mode switch: `NEXT_PUBLIC_STRIPE_MODE` ("test" or "live") selects which
+ * suffixed env block to read from. This lets us keep test + live keys
+ * side-by-side in .env.local and flip with one line. The webhook secret,
+ * publishable key, and price IDs all key off the same mode.
+ *
  * apiVersion is pinned so a Stripe-side breaking change won't silently
  * shift the shape of our webhook payloads. Bump intentionally after
  * reviewing the changelog.
- *
- * In dev, missing STRIPE_SECRET_KEY logs a warning and the eventual
- * call to a Stripe method throws — same pattern as supabase/admin.ts.
- * In production, missing key throws at import time so the route
- * fails fast at boot rather than mysteriously 500ing on first hit.
  */
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+export type StripeMode = "test" | "live";
+
+export function getStripeMode(): StripeMode {
+  const m = (process.env.NEXT_PUBLIC_STRIPE_MODE ?? "test").toLowerCase();
+  return m === "live" ? "live" : "test";
+}
+
+function envFor(varBase: string): string | undefined {
+  const suffix = getStripeMode() === "live" ? "LIVE" : "TEST";
+  return process.env[`${varBase}_${suffix}`];
+}
+
+/** Server-side: secret key for the active mode. */
+export function getStripeSecretKey(): string | undefined {
+  return envFor("STRIPE_SECRET_KEY");
+}
+
+/** Server-side: webhook signing secret for the active mode. */
+export function getStripeWebhookSecret(): string | undefined {
+  return envFor("STRIPE_WEBHOOK_SECRET");
+}
+
+const STRIPE_SECRET_KEY = getStripeSecretKey();
 
 if (!STRIPE_SECRET_KEY) {
   if (process.env.NODE_ENV === "production") {
     throw new Error(
-      "STRIPE_SECRET_KEY is required in production. Set it in your env.",
+      `STRIPE_SECRET_KEY_${getStripeMode().toUpperCase()} is required in production. Set it in your env.`,
     );
   } else {
     console.warn(
-      "[stripe] STRIPE_SECRET_KEY not set — Stripe client will throw on use.",
+      `[stripe] STRIPE_SECRET_KEY_${getStripeMode().toUpperCase()} not set — Stripe client will throw on use.`,
     );
   }
 }
@@ -33,13 +55,14 @@ if (!STRIPE_SECRET_KEY) {
 let _stripe: Stripe | null = null;
 
 export function getStripe(): Stripe {
-  if (!STRIPE_SECRET_KEY) {
+  const key = getStripeSecretKey();
+  if (!key) {
     throw new Error(
-      "Stripe client called without STRIPE_SECRET_KEY set.",
+      `Stripe client called without STRIPE_SECRET_KEY_${getStripeMode().toUpperCase()} set.`,
     );
   }
   if (!_stripe) {
-    _stripe = new Stripe(STRIPE_SECRET_KEY, {
+    _stripe = new Stripe(key, {
       // Pinned. Bump intentionally after reading the changelog.
       // Cast satisfies the SDK's literal-union type for apiVersion;
       // bump together with the stripe dep version.
@@ -54,20 +77,20 @@ export function getStripe(): Stripe {
   return _stripe;
 }
 
-/** Maps our internal plan keys → env-driven Stripe price IDs. */
+/** Maps our internal plan keys → env-driven Stripe price IDs (mode-aware). */
 export function getPriceId(
   plan: "operator-monthly" | "operator-annual" | "founders-pass",
 ): string {
-  const id =
+  const base =
     plan === "operator-monthly"
-      ? process.env.STRIPE_PRICE_OPERATOR_MONTHLY
+      ? "STRIPE_PRICE_OPERATOR_MONTHLY"
       : plan === "operator-annual"
-        ? process.env.STRIPE_PRICE_OPERATOR_ANNUAL
-        : process.env.STRIPE_PRICE_FOUNDERS_PASS;
-
+        ? "STRIPE_PRICE_OPERATOR_ANNUAL"
+        : "STRIPE_PRICE_FOUNDERS_PASS";
+  const id = envFor(base);
   if (!id) {
     throw new Error(
-      `Missing Stripe price ID for plan "${plan}". Set STRIPE_PRICE_* in env.`,
+      `Missing Stripe price ID for plan "${plan}" in ${getStripeMode()} mode. Set ${base}_${getStripeMode().toUpperCase()} in env.`,
     );
   }
   return id;

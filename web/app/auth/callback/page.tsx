@@ -81,14 +81,16 @@ function CallbackInner() {
     // The browser client auto-detects the URL session on construction —
     // we just need to wait for it to land. Use onAuthStateChange as the
     // primary signal, plus a getSession() poll as belt-and-suspenders.
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
-        void go();
-      }
-    });
+    const { data: sub } = supabase.auth.onAuthStateChange(
+      (event: string, session: unknown) => {
+        if (event === "SIGNED_IN" && session) {
+          void go();
+        }
+      },
+    );
 
     // Some browsers / refresh paths surface the session synchronously.
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data }: { data: { session: unknown } }) => {
       if (data.session) void go();
     });
 

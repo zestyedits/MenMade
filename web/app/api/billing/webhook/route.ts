@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import type Stripe from "stripe";
 import { createAdminClient } from "../../../lib/supabase/admin";
-import { getStripe } from "../../../lib/stripe";
+import { getStripe, getStripeWebhookSecret } from "../../../lib/stripe";
 
 /**
  * POST /api/billing/webhook
@@ -12,8 +12,8 @@ import { getStripe } from "../../../lib/stripe";
  *  1. Read RAW request body (text). Do NOT parse as JSON before
  *     verifying — `stripe.webhooks.constructEvent` needs the exact
  *     bytes Stripe signed.
- *  2. Verify signature with STRIPE_WEBHOOK_SECRET. Reject on
- *     mismatch.
+ *  2. Verify signature with the mode-resolved webhook secret
+ *     (STRIPE_WEBHOOK_SECRET_TEST or _LIVE). Reject on mismatch.
  *  3. Idempotency: INSERT into stripe_events (id PK). On conflict,
  *     this is a duplicate delivery — return 200 immediately.
  *  4. Dispatch by event type. Use the service-role Supabase client
@@ -50,9 +50,11 @@ function isoFromUnix(seconds: number | null | undefined): string | null {
 }
 
 export async function POST(request: NextRequest) {
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const webhookSecret = getStripeWebhookSecret();
   if (!webhookSecret) {
-    console.error("[billing/webhook] STRIPE_WEBHOOK_SECRET not set");
+    console.error(
+      "[billing/webhook] webhook secret not set for active Stripe mode",
+    );
     return new Response("Webhook secret not configured.", { status: 500 });
   }
 
