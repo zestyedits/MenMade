@@ -86,7 +86,7 @@ export async function signUpWithPassword(
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ??
     (typeof window !== "undefined" ? window.location.origin : "");
-  const emailRedirectTo = `${appUrl}/auth/sign-in?confirmed=1`;
+  const emailRedirectTo = `${appUrl}/auth/callback`;
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
