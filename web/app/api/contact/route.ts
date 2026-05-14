@@ -1,5 +1,7 @@
 import { Resend } from "resend";
 import { getClientIp, rateLimit } from "../../lib/rate-limit";
+import { recordConcernSignal } from "../../lib/admin-audit";
+import { createAdminClient } from "../../lib/supabase/admin";
 
 // Server-only. None of these values reach the client bundle.
 const CONTACT_EMAIL = process.env.CONTACT_EMAIL ?? "help@menmade.app";
@@ -79,6 +81,21 @@ export async function POST(request: Request) {
     payload.website.trim().length > 0
   ) {
     console.warn("[contact] honeypot triggered from ip=%s", ip);
+    // Surface for Buddy. Low severity; the bot got nothing through, but a
+    // spike is a useful "we're being scanned" signal.
+    try {
+      await recordConcernSignal(createAdminClient(), {
+        kind: "honeypot_tripped",
+        severity: "low",
+        title: "Contact-form honeypot tripped",
+        body: `IP ${ip} filled the website field — bot submission discarded.`,
+        metadata: { ip },
+      });
+    } catch (err) {
+      // Best-effort. Don't unmask the honeypot by surfacing a different
+      // response if the audit write fails.
+      console.warn("[contact] honeypot signal write failed:", err);
+    }
     return Response.json({ ok: true, mode: "honeypot-discard" });
   }
 

@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import type Stripe from "stripe";
 import { createAdminClient } from "../../../lib/supabase/admin";
+import { recordConcernSignal } from "../../../lib/admin-audit";
 import { getStripe, getStripeWebhookSecret } from "../../../lib/stripe";
 
 /**
@@ -265,6 +266,132 @@ export async function POST(request: NextRequest) {
           .from("subscriptions")
           .update({ status: "past_due" })
           .eq("stripe_subscription_id", subscriptionId);
+
+        // Buddy signal — medium severity. A failed payment is a recoverable
+        // event (Stripe retries) but worth surfacing so we don't lose
+        // operators silently to dunning.
+        const { data: sub } = await admin
+          .from("subscriptions")
+          .select("user_id,plan")
+          .eq("stripe_subscription_id", subscriptionId)
+          .maybeSingle();
+        if (sub?.user_id) {
+          const { data: u } = await admin.auth.admin.getUserById(sub.user_id);
+          await recordConcernSignal(admin, {
+            kind: "payment_failed",
+            severity: "medium",
+            title: "Subscription payment failed",
+            body:
+              (u?.user?.email
+                ? `${u.user.email} · ${sub.plan}. `
+                : `${sub.plan}. `) +
+              "Stripe will retry per dunning settings.",
+            relatedUserId: sub.user_id,
+            relatedEmail: u?.user?.email ?? null,
+            metadata: {
+              stripeSubscriptionId: subscriptionId,
+              plan: sub.plan,
+            },
+          });
+        }
+        break;
+      }
+
+      case "charge.refunded": {
+        // Fires when a charge is refunded — including refunds initiated
+        // from /api/admin/refund and refunds issued directly in the
+        // Stripe dashboard. Reconcile our row to status='refunded'.
+        //
+        // Per locked pricing policy: a refunded Founder's Pass DOES NOT
+        // release its founder seat. We deliberately leave `founder_seats`
+        // untouched here. The counter stays honest; we eat the refund.
+        const charge = event.data.object as Stripe.Charge;
+        const paymentIntentId =
+          typeof charge.payment_intent === "string"
+            ? charge.payment_intent
+            : (charge.payment_intent?.id ?? null);
+        const customerId =
+          typeof charge.customer === "string"
+            ? charge.customer
+            : (charge.customer?.id ?? null);
+
+        // Find the subscription. Try by stripe_customer_id first (works
+        // for both founder one-times and operator subs), then fall back
+        // to the payment_intent on the original founder session.
+        let matchedUserId: string | null = null;
+        if (customerId) {
+          const { data } = await admin
+            .from("subscriptions")
+            .select("user_id")
+            .eq("stripe_customer_id", customerId)
+            .maybeSingle();
+          matchedUserId = data?.user_id ?? null;
+        }
+        if (!matchedUserId && paymentIntentId) {
+          // For founder rows we stored the session id; retrieve the
+          // session to confirm the PI matches.
+          try {
+            const sessions = await stripe.checkout.sessions.list({
+              payment_intent: paymentIntentId,
+              limit: 1,
+            });
+            const sessionId = sessions.data[0]?.id ?? null;
+            if (sessionId) {
+              const { data } = await admin
+                .from("subscriptions")
+                .select("user_id")
+                .eq("stripe_session_id", sessionId)
+                .maybeSingle();
+              matchedUserId = data?.user_id ?? null;
+            }
+          } catch (err) {
+            console.warn(
+              "[billing/webhook] charge.refunded session lookup failed:",
+              err,
+            );
+          }
+        }
+
+        if (!matchedUserId) {
+          console.warn(
+            "[billing/webhook] charge.refunded without a matchable subscription",
+            { chargeId: charge.id },
+          );
+          break;
+        }
+
+        await admin
+          .from("subscriptions")
+          .update({
+            status: "refunded",
+            cancel_at_period_end: false,
+          })
+          .eq("user_id", matchedUserId);
+
+        // Buddy signal — low severity. Refunds are routine, but seeing them
+        // in the feed gives the founder a daily sense of churn shape.
+        const { data: u } = await admin.auth.admin.getUserById(matchedUserId);
+        const amountDollars =
+          typeof charge.amount_refunded === "number"
+            ? (charge.amount_refunded / 100).toFixed(2)
+            : null;
+        await recordConcernSignal(admin, {
+          kind: "refund_issued",
+          severity: "low",
+          title: amountDollars
+            ? `Refund issued · $${amountDollars}`
+            : "Refund issued",
+          body: u?.user?.email
+            ? `${u.user.email} refunded.`
+            : "Subscription refunded.",
+          relatedUserId: matchedUserId,
+          relatedEmail: u?.user?.email ?? null,
+          metadata: {
+            chargeId: charge.id,
+            amountRefunded: charge.amount_refunded,
+            paymentIntent: paymentIntentId,
+          },
+        });
         break;
       }
 

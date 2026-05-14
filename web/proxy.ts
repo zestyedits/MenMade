@@ -30,6 +30,11 @@ const PROTECTED_PREFIXES = [
   "/onboarding",
   "/settings",
   "/field-log",
+  // /admin is signed-in-gated here. The actual admin-allowlist check
+  // happens inside requireAdmin() (app/lib/admin.ts) at the page level
+  // — proxy doesn't read ADMIN_EMAILS so we keep middleware cheap and
+  // the admin set out of the edge runtime's env scope.
+  "/admin",
 ];
 
 const ALLOWED_ORIGINS = new Set(
@@ -82,6 +87,15 @@ export async function proxy(request: NextRequest) {
   // their own session via createClient(). Avoids cookie-mutation
   // weirdness that breaks API route matching.
   if (isApi) return NextResponse.next();
+
+  // Also skip session-refresh on /auth/* — these pages handle their own
+  // auth flow client-side (sign-in, sign-up, password recovery, callback).
+  // Critically, password-recovery and email-confirmation links arrive
+  // here with a `?code=` PKCE param that must be consumed by the CLIENT
+  // (via exchangeCodeForSession). If the server client touches it first
+  // during session refresh, the code is burned and the page can never
+  // verify — manifests as the reset-password page hanging in "Verifying."
+  if (pathname.startsWith("/auth/")) return NextResponse.next();
 
   // ---------- 2. Supabase session refresh (page routes only)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

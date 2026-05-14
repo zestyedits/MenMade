@@ -12,7 +12,7 @@ import { store } from "../../lib/store";
 
 type Errors = { email?: string; password?: string; general?: string };
 
-type BannerKind = "confirm-email" | "confirmed" | "reset-sent" | null;
+type BannerKind = "confirm-email" | "confirmed" | "reset-sent" | "reset-ok" | null;
 
 export default function SignInPage() {
   return (
@@ -48,6 +48,10 @@ function SignInInner() {
     }
     if (searchParams.get("reset") === "1") {
       setBanner("reset-sent");
+      return;
+    }
+    if (searchParams.get("reset") === "ok") {
+      setBanner("reset-ok");
     }
   }, [searchParams]);
 
@@ -162,6 +166,27 @@ function SignInInner() {
             </div>
             <p className="text-[13.5px] leading-relaxed text-bone">
               Check your inbox. Use the link to set a new password.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      {banner === "reset-ok" ? (
+        <div
+          role="status"
+          className="flex items-start gap-3 border border-bone/30 bg-bone/[0.04] px-4 py-3.5"
+        >
+          <CheckCircle
+            size={18}
+            weight="bold"
+            className="mt-0.5 shrink-0 text-bone"
+          />
+          <div className="flex flex-col gap-1">
+            <div className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-bone">
+              Password updated
+            </div>
+            <p className="text-[13.5px] leading-relaxed text-bone">
+              Sign in with your new password.
             </p>
           </div>
         </div>

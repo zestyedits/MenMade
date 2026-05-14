@@ -59,12 +59,14 @@ export default async function BillingPage() {
         startedAtIso: null, // The DB has started_at; column not in the projection. UI uses renewsAtIso.
         renewsAtIso: sub.current_period_end,
         founderSeatNumber: sub.founder_seat_number,
+        cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
       }
     : {
         plan: "free",
         startedAtIso: null,
         renewsAtIso: null,
         founderSeatNumber: null,
+        cancelAtPeriodEnd: false,
       };
 
   return (

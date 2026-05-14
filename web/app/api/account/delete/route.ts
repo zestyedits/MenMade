@@ -1,5 +1,6 @@
 import { createClient } from "../../../lib/supabase/server";
 import { createAdminClient } from "../../../lib/supabase/admin";
+import { recordConcernSignal } from "../../../lib/admin-audit";
 
 /**
  * Account deletion — required by Apple App Store Guideline 5.1.1(v).
@@ -36,6 +37,9 @@ export async function POST() {
 
   try {
     const admin = createAdminClient();
+    // Capture the email BEFORE deletion — we won't be able to read it after.
+    const targetEmail = user.email ?? null;
+
     const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
 
     if (deleteError) {
@@ -45,6 +49,20 @@ export async function POST() {
         { status: 500 },
       );
     }
+
+    // Buddy signal — low severity. Self-serve deletions are routine; the
+    // value is shape ("are we losing 5 a day?") rather than per-event alarm.
+    await recordConcernSignal(admin, {
+      kind: "account_deleted",
+      severity: "low",
+      title: "Operator deleted their account",
+      body: targetEmail
+        ? `${targetEmail} self-served the delete flow.`
+        : "An operator self-served the delete flow.",
+      relatedUserId: null,
+      relatedEmail: targetEmail,
+      metadata: { selfServed: true, originalUserId: user.id },
+    });
 
     // Sign the session out so the cookie can't be re-used.
     await supabase.auth.signOut();

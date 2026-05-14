@@ -54,6 +54,15 @@ export async function getSession(): Promise<Session | null> {
 /**
  * Email + password sign-in. Errors carry user-safe strings.
  * Login enumeration is mitigated by Supabase's default messaging.
+ *
+ * Suspension check: after a successful auth, we look up the user's
+ * profile row for `suspended_at`. If present, we immediately sign the
+ * session out and return a refusal with the suspension reason. The
+ * reason is admin-authored and intended to be shown to the user — keep
+ * the wording dry and direct in the admin UI.
+ *
+ * RLS lets a freshly-signed-in user read their own profiles row, so the
+ * check works with the user-scoped client (no service role required).
  */
 export async function signInWithPassword(
   email: string,
@@ -67,6 +76,40 @@ export async function signInWithPassword(
   if (error || !data.user) {
     return { ok: false, error: error?.message ?? "Sign-in failed." };
   }
+
+  // Suspension gate. The profile row may not exist yet for users who never
+  // finished onboarding — in that case there's no suspension to check.
+  //
+  // Timed suspensions auto-lift: we treat a profile as "currently suspended"
+  // only when suspended_at is set AND (suspended_until is null OR in the
+  // future). When the window expires, sign-in silently starts working again
+  // without needing a cron to flip the columns back.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("suspended_at, suspension_reason, suspended_until")
+    .eq("user_id", data.user.id)
+    .maybeSingle();
+
+  const stillSuspended =
+    profile?.suspended_at &&
+    (profile.suspended_until == null ||
+      new Date(profile.suspended_until).getTime() > Date.now());
+
+  if (stillSuspended) {
+    await supabase.auth.signOut();
+    const reason =
+      profile?.suspension_reason && profile.suspension_reason.trim().length > 0
+        ? profile.suspension_reason
+        : "No reason on file. Contact support.";
+    const liftSuffix = profile?.suspended_until
+      ? ` Access returns on ${new Date(profile.suspended_until).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric" })}.`
+      : "";
+    return {
+      ok: false,
+      error: `Account suspended. Reason: ${reason}.${liftSuffix}`,
+    };
+  }
+
   return { ok: true, userId: data.user.id };
 }
 
@@ -113,7 +156,7 @@ export async function resetPasswordForEmail(email: string): Promise<AuthResult> 
     process.env.NEXT_PUBLIC_APP_URL ??
     (typeof window !== "undefined" ? window.location.origin : "");
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${appUrl}/auth/sign-in?reset=1`,
+    redirectTo: `${appUrl}/auth/reset-password`,
   });
   if (error) {
     // Even on error, return ok to the UI to avoid enumeration leaks.

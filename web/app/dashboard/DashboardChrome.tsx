@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -12,10 +12,41 @@ import {
   CaretDown,
   GearSix,
   User,
+  ShieldStar,
 } from "@phosphor-icons/react/dist/ssr";
 import { Logo } from "../components/ui/Logo";
-import { Avatar } from "../components/ui/Avatar";
+import { TieredAvatar } from "../components/ui/TieredAvatar";
 import { signOut, type Session } from "../lib/auth";
+import { useTier } from "../lib/use-tier";
+
+/**
+ * One-shot admin probe. Returns true only after the /api/admin/check
+ * endpoint confirms 200. False until then. Cached for the lifetime of
+ * the component (one fetch per mount, no re-poll).
+ */
+function useIsAdmin(): boolean {
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/check", {
+          method: "GET",
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+        if (!cancelled && res.ok) setIsAdmin(true);
+      } catch {
+        // Network failure → assume not admin. The /admin route still
+        // gates server-side, so a false negative just hides the link.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return isAdmin;
+}
 
 // Nav options are built one at a time. Adding to this array brings the
 // option online in both the desktop top nav and the mobile bottom nav.
@@ -36,6 +67,21 @@ export function DashboardChrome({
   const router = useRouter();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const tier = useTier();
+  const isAdmin = useIsAdmin();
+  const tierLine = (() => {
+    if (tier === "loading" || tier.plan === "free") return null;
+    if (tier.plan === "founder") {
+      const seat = tier.founderSeatNumber;
+      return seat
+        ? `Founder · seat ${String(seat).padStart(3, "0")}/500`
+        : "Founder";
+    }
+    return tier.plan === "operator-annual"
+      ? "Operator · annual"
+      : "Operator · monthly";
+  })();
+  const isFounder = tier !== "loading" && tier.plan === "founder";
 
   async function handleSignOut() {
     await signOut();
@@ -87,7 +133,7 @@ export function DashboardChrome({
               aria-expanded={menuOpen}
               className="group flex items-center gap-2.5 rounded-sm px-1 py-1 transition hover:bg-white/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember-400/50"
             >
-              <Avatar name={session.name} size="sm" />
+              <TieredAvatar name={session.name} tier={tier} size="sm" />
               <span className="hidden text-[13px] text-bone/90 md:inline">
                 {session.handle}
               </span>
@@ -120,6 +166,15 @@ export function DashboardChrome({
                     <div className="truncate text-[12px] text-ink-300/70">
                       {session.email}
                     </div>
+                    {tierLine ? (
+                      <div
+                        className={`mt-2 inline-flex items-center font-mono text-[10px] uppercase tracking-[0.22em] ${
+                          isFounder ? "text-ember-400" : "text-bone/80"
+                        }`}
+                      >
+                        {tierLine}
+                      </div>
+                    ) : null}
                   </div>
                   <Link
                     href="/dashboard"
@@ -139,6 +194,17 @@ export function DashboardChrome({
                     Settings
                     <GearSix size={14} weight="bold" />
                   </Link>
+                  {isAdmin ? (
+                    <Link
+                      href="/admin"
+                      role="menuitem"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex w-full items-center justify-between border-t border-white/[0.06] px-4 py-2.5 text-left text-[13px] text-ember-400/90 transition hover:bg-white/[0.04] hover:text-ember-400"
+                    >
+                      Admin
+                      <ShieldStar size={14} weight="bold" />
+                    </Link>
+                  ) : null}
                   <button
                     role="menuitem"
                     onClick={handleSignOut}

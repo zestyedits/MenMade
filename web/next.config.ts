@@ -16,12 +16,20 @@ const SUPABASE_HOST = (() => {
 // number of inline scripts (RSC payloads, hydration markers) that don't
 // have nonces. Tightening to a nonce-only policy is a one-day project
 // (see Section 6 of the security audit) — tracked as a follow-up.
+//
+// 'unsafe-eval' is appended in development mode only. React's dev build
+// uses eval() to reconstruct callstacks for error reporting; production
+// React never uses eval() so we drop it there. Without this dev allow,
+// every client component fails to hydrate behind a CSP header.
+const isDev = process.env.NODE_ENV !== "production";
+const devEvalGrant = isDev ? " 'unsafe-eval'" : "";
+
 const cspParts: string[] = [
   "default-src 'self'",
   // Stripe.js (js.stripe.com) is loaded by the Checkout/Portal
   // redirect flow's tiny bootstrap; not strictly needed for our
   // server-issued session URLs but listed defensively.
-  `script-src 'self' 'unsafe-inline' https://js.stripe.com${SUPABASE_HOST ? ` https://${SUPABASE_HOST}` : ""}`,
+  `script-src 'self' 'unsafe-inline'${devEvalGrant} https://js.stripe.com${SUPABASE_HOST ? ` https://${SUPABASE_HOST}` : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self' data:",

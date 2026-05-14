@@ -4,6 +4,7 @@ import { getStripe } from "../../../lib/stripe";
 import { MonoLabel } from "../../../components/ui/MonoLabel";
 import { Section } from "../../../components/ui/Section";
 import { Button } from "../../../components/ui/Button";
+import { AutoRedirect } from "./AutoRedirect";
 
 /**
  * Stripe Embedded Checkout `return_url` lands here with the session ID.
@@ -61,13 +62,16 @@ export default async function CheckoutReturnPage({
       <Section
         kicker="01 / What happens next"
         title="No further action"
-        description="Stripe finalizes the receipt and our server reconciles in the background. Refresh your billing page in a moment if you don't see the new plan."
+        description="Stripe finalizes the receipt and our server reconciles in the background. We'll route you back to billing in a moment so you can see your new plan."
       >
-        <div className="flex flex-wrap gap-3">
-          <Button href="/settings/billing">Back to billing</Button>
-          <Button variant="secondary" href="/dashboard">
-            Dashboard
-          </Button>
+        <div className="flex flex-col gap-4">
+          <AutoRedirect to="/settings/billing" seconds={12} />
+          <div className="flex flex-wrap gap-3">
+            <Button href="/settings/billing">Back to billing now</Button>
+            <Button variant="secondary" href="/dashboard">
+              Dashboard
+            </Button>
+          </div>
         </div>
       </Section>
 

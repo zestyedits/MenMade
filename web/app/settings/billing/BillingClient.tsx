@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   CheckCircle,
   AppleLogo,
@@ -31,6 +32,7 @@ export type Subscription = {
   startedAtIso: string | null;
   renewsAtIso: string | null;
   founderSeatNumber: number | null;
+  cancelAtPeriodEnd: boolean;
 };
 
 type BillingClientProps = {
@@ -58,10 +60,17 @@ export default function BillingClient({
   founderClaimed,
   founderCap,
 }: BillingClientProps) {
-  const [sub] = useState<Subscription>(initialSub);
+  const router = useRouter();
+  // Read the subscription directly from the prop, not from local state.
+  // The server component re-fetches on router.refresh() after cancel/resume,
+  // pushing fresh data down as a new prop. useState would freeze the
+  // initial value at mount and ignore the update.
+  const sub = initialSub;
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [busyPlan, setBusyPlan] = useState<Plan | null>(null);
   const [portalBusy, setPortalBusy] = useState(false);
+  const [cancelBusy, setCancelBusy] = useState(false);
+  const [resumeBusy, setResumeBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkoutSecret, setCheckoutSecret] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -143,12 +152,48 @@ export default function BillingClient({
     });
   }
 
-  function cancel() {
-    // Cancel routes the user to the portal where Stripe's own UI
-    // handles the flow (per Stripe Terms, retention dark patterns
-    // are limited there too).
-    setShowCancelConfirm(false);
-    openPortal();
+  /**
+   * Schedules cancellation at the end of the current period via
+   * /api/billing/cancel. The user keeps access until then. We refresh
+   * the page so the Section copy + button labels flip to the
+   * "cancel pending" state without a manual reload.
+   */
+  async function cancel() {
+    setError(null);
+    setCancelBusy(true);
+    try {
+      const res = await fetch("/api/billing/cancel", { method: "POST" });
+      const data = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || !data.ok) {
+        setError(data.error ?? "Couldn't cancel. Try again.");
+        return;
+      }
+      setShowCancelConfirm(false);
+      router.refresh();
+    } catch {
+      setError("Network hiccup. Try again.");
+    } finally {
+      setCancelBusy(false);
+    }
+  }
+
+  /** Reverses a pending cancellation while still in the grace period. */
+  async function resume() {
+    setError(null);
+    setResumeBusy(true);
+    try {
+      const res = await fetch("/api/billing/resume", { method: "POST" });
+      const data = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || !data.ok) {
+        setError(data.error ?? "Couldn't resume. Try again.");
+        return;
+      }
+      router.refresh();
+    } catch {
+      setError("Network hiccup. Try again.");
+    } finally {
+      setResumeBusy(false);
+    }
   }
 
   const isFree = sub.plan === "free";
@@ -173,6 +218,20 @@ export default function BillingClient({
               <span className="text-bone">{sub.founderSeatNumber}</span> of{" "}
               {FOUNDER_PASS_CAP}. All current and future Operator features
               locked in at the founding price. No renewal.
+            </>
+          ) : isOperator && sub.cancelAtPeriodEnd ? (
+            <>
+              Scheduled to end{" "}
+              <span className="text-bone">
+                {sub.renewsAtIso
+                  ? new Date(sub.renewsAtIso).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                  : "soon"}
+              </span>
+              . You keep Operator features until then. Resume any time below.
             </>
           ) : isOperator ? (
             <>
@@ -423,10 +482,27 @@ export default function BillingClient({
       {isOperator ? (
         <Section
           kicker="03 / Manage"
-          title="Cancel or change"
-          description="Cancel takes effect at the end of your current period. No retention agent, no surveys."
+          title={sub.cancelAtPeriodEnd ? "Pending cancel" : "Cancel or change"}
+          description={
+            sub.cancelAtPeriodEnd
+              ? "Cancellation is queued for the end of your current period. Change your mind any time before then."
+              : "Cancel takes effect at the end of your current period. No retention agent, no surveys."
+          }
         >
-          {!showCancelConfirm ? (
+          {sub.cancelAtPeriodEnd ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <Button disabled={resumeBusy} onClick={resume}>
+                {resumeBusy ? "Resuming…" : "Resume subscription"}
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={portalBusy}
+                onClick={openPortal}
+              >
+                {portalBusy ? "Opening…" : "Manage billing"}
+              </Button>
+            </div>
+          ) : !showCancelConfirm ? (
             <div className="flex flex-wrap items-center gap-3">
               <Button
                 variant="secondary"
@@ -461,14 +537,16 @@ export default function BillingClient({
                 <button
                   type="button"
                   onClick={cancel}
-                  className="tactile inline-flex items-center gap-2 bg-ember-400 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink-950 transition hover:bg-ember-300"
+                  disabled={cancelBusy}
+                  className="tactile inline-flex items-center gap-2 bg-ember-400 px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink-950 transition hover:bg-ember-300 disabled:opacity-60"
                 >
-                  Confirm cancel
+                  {cancelBusy ? "Canceling…" : "Confirm cancel"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowCancelConfirm(false)}
-                  className="font-mono text-[11px] uppercase tracking-[0.22em] text-ink-200/80 transition hover:text-bone"
+                  disabled={cancelBusy}
+                  className="font-mono text-[11px] uppercase tracking-[0.22em] text-ink-200/80 transition hover:text-bone disabled:opacity-60"
                 >
                   Keep my plan
                 </button>
