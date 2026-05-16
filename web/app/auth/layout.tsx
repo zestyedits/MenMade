@@ -29,7 +29,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           <Logo size="md" />
 
           <div className="mt-auto flex flex-col gap-8">
-            <MonoLabel rule>Operative / authenticating</MonoLabel>
+            <MonoLabel rule>Signing in</MonoLabel>
 
             <h2 className="max-w-[14ch] text-balance text-[44px] font-extrabold uppercase leading-[0.95] tracking-tight text-bone">
               Stop scrolling. <span className="text-ember-400">Start cycling.</span>
@@ -55,7 +55,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         {/* Mobile-only logo strip */}
         <div className="flex items-center justify-between border-b border-white/[0.04] px-5 py-4 lg:hidden">
           <Logo size="sm" />
-          <MonoLabel>Operative / auth</MonoLabel>
+          <MonoLabel>Sign in</MonoLabel>
         </div>
 
         <div className="flex flex-1 items-center justify-center px-5 py-12 md:px-10">

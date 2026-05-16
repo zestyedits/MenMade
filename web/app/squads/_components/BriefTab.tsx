@@ -34,7 +34,7 @@ export function BriefTab({ squad }: Props) {
     {
       day: `Day 01`,
       label: "Cycle opened",
-      detail: `${squad.roster.length + 1} operatives enlisted. Brief signed.`,
+      detail: `${squad.roster.length + 1} members joined. Brief signed.`,
     },
     {
       day: `Day ${String(Math.floor(squad.totalDays / 4)).padStart(2, "0")}`,
@@ -44,7 +44,7 @@ export function BriefTab({ squad }: Props) {
     {
       day: `Day ${String(Math.floor(squad.totalDays / 2)).padStart(2, "0")}`,
       label: "Halfway mark",
-      detail: "Cadence held. Two operatives flagged slipping — both came back.",
+      detail: "Cadence held. Two members flagged slipping — both came back.",
     },
     {
       day: `Day ${String(squad.cycleDay).padStart(2, "0")}`,
@@ -65,7 +65,7 @@ export function BriefTab({ squad }: Props) {
             </h2>
             <p className="mt-5 max-w-[60ch] text-[15px] leading-relaxed text-ink-200/85">
               {template?.brief ??
-                "Custom cycle for this squad. No template — the operatives defined what done looks like at intake."}
+                "Custom cycle for this squad. No template — the members defined what done looks like at intake."}
             </p>
 
             {template?.summary ? (
@@ -201,7 +201,7 @@ export function BriefTab({ squad }: Props) {
                   value: squad.roster.filter((m) => m.online).length + 1,
                 },
                 {
-                  label: "Operatives",
+                  label: "Members",
                   value: squad.roster.length + 1,
                 },
                 {

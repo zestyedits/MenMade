@@ -125,7 +125,7 @@ function CallbackShell({ label, error }: { label: string; error?: string | null 
             <Dot delay="0.32s" />
           </div>
           <p className="max-w-sm text-[13.5px] leading-relaxed text-ink-300/80">
-            Confirming your enlistment and pulling your file.
+            Confirming your email and pulling your file.
           </p>
         </>
       )}

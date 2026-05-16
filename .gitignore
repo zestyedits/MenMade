@@ -1,0 +1,12 @@
+# Root-level dependency installs (the real app lives in web/ — anything
+# installed at the repo root is incidental and shouldn't be tracked).
+/node_modules
+/package-lock.json
+/package.json
+
+# Editor + OS
+.DS_Store
+*.swp
+
+# Misc
+*.log

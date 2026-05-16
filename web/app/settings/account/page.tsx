@@ -87,7 +87,7 @@ export default function AccountSettingsPage() {
     <>
       <Section
         kicker="01 / Identity"
-        title="Operative ID"
+        title="Member ID"
         description={
           <>
             What the squad sees. Your handle is also the link people use to
@@ -126,7 +126,7 @@ export default function AccountSettingsPage() {
       <Section
         kicker="02 / Sign-in"
         title="Email & password"
-        description="Sign-in identity. Changing your email moves your operative ID to the new address; old links keep working."
+        description="Sign-in identity. Changing your email moves your account to the new address; old links keep working."
       >
         <div className="flex flex-col gap-5">
           <Input

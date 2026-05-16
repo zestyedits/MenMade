@@ -42,7 +42,7 @@ type BillingClientProps = {
 };
 
 const PLAN_LABEL: Record<Plan, string> = {
-  free: "Free Operative",
+  free: "Free",
   "operator-monthly": "Operator (Monthly)",
   "operator-annual": "Operator (Annual)",
   founder: "Founder's Pass",

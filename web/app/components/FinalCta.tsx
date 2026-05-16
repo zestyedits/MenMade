@@ -1,8 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
-import { MagneticButton } from "./MagneticButton";
+import { PrimaryCta } from "./PrimaryCta";
 
 export function FinalCta() {
   return (
@@ -47,17 +46,13 @@ export function FinalCta() {
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-4">
-            <MagneticButton
-              aria-label="Start a squad"
-              className="tactile group inline-flex h-13 items-center gap-2 rounded-full bg-ember-500 px-7 py-3.5 text-[15px] font-medium text-ink-950 shadow-[inset_0_1px_0_rgb(255_255_255_/_0.45),0_22px_50px_-20px_rgb(221_87_34_/_0.85)]"
+            <PrimaryCta
+              href="/auth/sign-up"
+              ariaLabel="Form your squad"
+              size="lg"
             >
-              Start a squad
-              <ArrowUpRight
-                size={15}
-                weight="bold"
-                className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-              />
-            </MagneticButton>
+              Form your squad
+            </PrimaryCta>
 
             <a
               href="#impact"

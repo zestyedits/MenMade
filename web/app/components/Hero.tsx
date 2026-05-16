@@ -3,8 +3,9 @@
 import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import { ArrowUpRight, Play } from "@phosphor-icons/react/dist/ssr";
-import { MagneticButton } from "./MagneticButton";
+import Link from "next/link";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { PrimaryCta } from "./PrimaryCta";
 
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
@@ -100,30 +101,20 @@ export function Hero() {
               transition={{ duration: 0.9, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
               className="mt-10 flex flex-wrap items-center gap-3"
             >
-              <MagneticButton
-                aria-label="Form your squad"
-                className="tactile group inline-flex h-12 items-center gap-2 rounded-full bg-bone px-6 text-[14px] font-medium text-ink-950 shadow-[inset_0_1px_0_rgb(255_255_255_/_0.55),0_18px_38px_-18px_rgb(221_87_34_/_0.6)] ring-1 ring-inset ring-white/10"
+              <PrimaryCta
+                href="/auth/sign-up"
+                ariaLabel="Form your squad"
               >
                 Form your squad
-                <ArrowUpRight
-                  size={14}
-                  weight="bold"
-                  className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                />
-              </MagneticButton>
+              </PrimaryCta>
 
-              <button
-                type="button"
+              <Link
+                href="/how-it-works"
                 className="tactile inline-flex h-12 items-center gap-2.5 rounded-full border border-white/12 bg-white/[0.04] px-5 text-[14px] text-bone backdrop-blur-md transition hover:bg-white/[0.08]"
               >
-                <span className="grid h-6 w-6 place-items-center rounded-full bg-bone text-ink-950">
-                  <Play size={10} weight="fill" />
-                </span>
-                Watch a squad cycle
-                <span className="font-mono text-[11px] text-ink-300/70">
-                  1:24
-                </span>
-              </button>
+                See it run
+                <ArrowRight size={13} weight="bold" className="text-ink-300/80" />
+              </Link>
             </motion.div>
           </div>
 

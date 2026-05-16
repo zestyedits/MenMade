@@ -99,16 +99,19 @@ export function SquadHero({ squad, myHandle, myName }: Props) {
             <span className="font-mono text-[10px] uppercase tracking-[0.32em] text-ink-300/55">
               Cycle
             </span>
-            <span className="mt-1.5 font-mono text-[14px] font-bold tabular-nums text-bone">
+            <span className="mt-1.5 font-mono text-[13px] tabular-nums text-ink-200/85">
               {squad.cycleCode}
             </span>
           </div>
+          {/* Day is the load-bearing value — only one number on this strip
+              earns the bold, large treatment; the rest are intentionally
+              dialed down so the eye lands here first. */}
           <div className="flex flex-col">
             <span className="font-mono text-[10px] uppercase tracking-[0.32em] text-ink-300/55">
               Day
             </span>
-            <span className="mt-1.5 font-mono text-[14px] tabular-nums text-bone">
-              <span className="font-bold">
+            <span className="mt-1.5 font-mono text-[18px] tabular-nums text-bone">
+              <span className="font-extrabold">
                 {String(squad.cycleDay).padStart(2, "0")}
               </span>
               <span className="text-ink-300/55">
@@ -121,8 +124,8 @@ export function SquadHero({ squad, myHandle, myName }: Props) {
             <span className="font-mono text-[10px] uppercase tracking-[0.32em] text-ink-300/55">
               Intensity
             </span>
-            <span className="mt-1.5 inline-flex items-center gap-1.5 font-mono text-[14px] font-bold uppercase text-bone">
-              <Lightning size={12} weight="fill" className="text-ember-400" />
+            <span className="mt-1.5 inline-flex items-center gap-1.5 font-mono text-[13px] uppercase text-ink-200/85">
+              <Lightning size={12} weight="bold" className="text-ink-300/65" />
               {squad.intensity}
             </span>
           </div>
@@ -130,8 +133,8 @@ export function SquadHero({ squad, myHandle, myName }: Props) {
             <span className="font-mono text-[10px] uppercase tracking-[0.32em] text-ink-300/55">
               On channel
             </span>
-            <span className="mt-1.5 font-mono text-[14px] tabular-nums text-bone">
-              <span className="font-bold">{onlineCount}</span>
+            <span className="mt-1.5 font-mono text-[13px] tabular-nums text-ink-200/85">
+              {onlineCount}
               <span className="text-ink-300/55"> / {totalCount}</span>
             </span>
           </div>
@@ -181,7 +184,7 @@ export function SquadHero({ squad, myHandle, myName }: Props) {
           {/* Roster avatar stack */}
           <div className="flex flex-col items-start gap-2 md:items-end">
             <span className="font-mono text-[10px] uppercase tracking-[0.32em] text-ink-300/55">
-              Operatives
+              Members
             </span>
             <div className="flex -space-x-2.5">
               {/* You first — bone ring instead of ember, "you" is the anchor */}

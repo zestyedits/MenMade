@@ -234,7 +234,7 @@ export function RosterTab({ squad, myHandle, myName }: Props) {
             Who&rsquo;s in the squad.
           </h2>
           <p className="mt-5 max-w-[44ch] text-[14px] leading-relaxed text-ink-200/80">
-            Tap any operative to see their stats and the actions you can take.
+            Tap any member to see their stats and the actions you can take.
             Blocking is mutual: they can&rsquo;t see you either.
           </p>
 

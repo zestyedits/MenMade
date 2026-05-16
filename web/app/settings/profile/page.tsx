@@ -170,7 +170,7 @@ export default function ProfileSettingsPage() {
       <Section
         kicker="03 / Dial"
         title="Intensity & cadence"
-        description="Honest is better than ambitious. We match you to operatives running the same dial."
+        description="Honest is better than ambitious. We match you to men running the same dial."
       >
         <div className="flex flex-col gap-7">
           <RadioGroup

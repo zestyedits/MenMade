@@ -22,8 +22,8 @@ type Step = {
 const STEPS: Step[] = [
   {
     index: "01",
-    title: "Enlist.",
-    satire: "Two minutes of intake. Then you're in.",
+    title: "Sign up.",
+    satire: "Two minutes of setup. Then you're in.",
     body: "Apple, Google, or just an email. We don't ask for your follower count or your astrological sign.",
     Mock: MockEnlist,
   },
@@ -38,7 +38,7 @@ const STEPS: Step[] = [
     index: "03",
     title: "Get matched.",
     satire: "Real men. Vetted by what they actually do.",
-    body: "Three to eight operatives in your time-zone band, calibrated to the same intensity dial. A squad, not a chat room.",
+    body: "Three to eight men in your time-zone band, calibrated to the same intensity dial. A squad, not a chat room.",
     Mock: MockMatched,
   },
   {

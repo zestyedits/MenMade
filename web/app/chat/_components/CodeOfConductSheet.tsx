@@ -10,7 +10,7 @@ const RULES = [
   },
   {
     title: "Punch up, not down.",
-    body: "Roasts target the dodge, not the human. No slurs, no harassment based on identity, no targeting one operative repeatedly. We rate-limit pile-ons before banning anyone.",
+    body: "Roasts target the dodge, not the human. No slurs, no harassment based on identity, no targeting one member repeatedly. We rate-limit pile-ons before banning anyone.",
   },
   {
     title: "Hard floors are non-negotiable.",
@@ -66,8 +66,8 @@ export function CodeOfConductSheet({
           >
             <div className="flex items-start justify-between border-b border-white/[0.06] p-6">
               <div className="flex items-start gap-3">
-                <span className="grid h-9 w-9 place-items-center bg-ember-400 text-ink-950">
-                  <ShieldCheck size={18} weight="fill" />
+                <span className="grid h-9 w-9 place-items-center border border-ember-400/60 text-ember-400">
+                  <ShieldCheck size={18} weight="bold" />
                 </span>
                 <div>
                   <p className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-ember-400/85">
@@ -91,7 +91,7 @@ export function CodeOfConductSheet({
             <ol className="flex flex-col divide-y divide-white/[0.05] px-6">
               {RULES.map((r, i) => (
                 <li key={r.title} className="flex gap-4 py-5">
-                  <span className="font-mono text-[12px] font-bold tabular-nums text-ember-400/85">
+                  <span className="font-mono text-[12px] font-bold tabular-nums text-bone">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <div>

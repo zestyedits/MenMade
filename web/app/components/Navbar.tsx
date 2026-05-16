@@ -6,12 +6,13 @@ import { ArrowUpRight, List, X } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Logo } from "./ui/Logo";
+import { PrimaryCta } from "./PrimaryCta";
+import { useIsSignedIn } from "../lib/use-auth";
 
 const NAV_LINKS = [
   { label: "How it works", href: "/how-it-works" },
   { label: "Pricing", href: "/pricing" },
-  { label: "Squads", href: "/#proof" },
-  { label: "Contact", href: "/contact" },
+  { label: "Field log", href: "/#proof" },
 ];
 
 export function Navbar() {
@@ -21,6 +22,11 @@ export function Navbar() {
 
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const auth = useIsSignedIn();
+  const isSignedIn = auth === "signed-in";
+  // When signed in, the logo routes to /dashboard so users never get
+  // accidentally bounced into the marketing landing page mid-session.
+  const logoHref = isSignedIn ? "/dashboard" : "/";
 
   // Close mobile menu on route change.
   useEffect(() => {
@@ -85,11 +91,11 @@ export function Navbar() {
         aria-label="Primary"
         className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-5 md:px-10"
       >
-        <Logo size="md" />
+        <Logo size="md" href={logoHref} />
 
         {/* Desktop nav */}
         <ul className="hidden items-center gap-1 md:flex">
-          {NAV_LINKS.slice(0, 3).map(({ label, href }) => (
+          {NAV_LINKS.map(({ label, href }) => (
             <li key={href}>
               <Link
                 href={href}
@@ -107,23 +113,23 @@ export function Navbar() {
         </ul>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <Link
-            href="/auth/sign-in"
-            className="hidden font-mono text-[11px] uppercase tracking-[0.22em] text-ink-100/75 transition hover:text-bone md:inline-flex"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/auth/sign-up"
-            className="tactile group inline-flex items-center gap-2 bg-bone px-4 py-2 font-sans text-[13px] font-bold uppercase tracking-[0.08em] text-ink-950 transition hover:bg-white"
-          >
-            Enlist
-            <ArrowUpRight
-              size={14}
-              weight="bold"
-              className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-            />
-          </Link>
+          {isSignedIn ? (
+            <PrimaryCta href="/dashboard" flat>
+              Open dashboard
+            </PrimaryCta>
+          ) : (
+            <>
+              <Link
+                href="/auth/sign-in"
+                className="hidden font-mono text-[11px] uppercase tracking-[0.22em] text-ink-100/75 transition hover:text-bone md:inline-flex"
+              >
+                Sign in
+              </Link>
+              <PrimaryCta href="/auth/sign-up" flat>
+                Sign up
+              </PrimaryCta>
+            </>
+          )}
 
           {/* Mobile hamburger */}
           <button
@@ -191,19 +197,31 @@ export function Navbar() {
                 </ul>
 
                 <div className="mt-6 flex flex-col gap-3">
-                  <Link
-                    href="/auth/sign-in"
-                    className="inline-flex items-center justify-center border border-white/15 px-4 py-3 font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-bone transition hover:border-white/30"
-                  >
-                    Sign in
-                  </Link>
-                  <Link
-                    href="/auth/sign-up"
-                    className="inline-flex items-center justify-center gap-2 bg-bone px-4 py-3 font-sans text-[13px] font-bold uppercase tracking-[0.08em] text-ink-950 transition hover:bg-white"
-                  >
-                    Enlist
-                    <ArrowUpRight size={14} weight="bold" />
-                  </Link>
+                  {isSignedIn ? (
+                    <Link
+                      href="/dashboard"
+                      className="inline-flex items-center justify-center gap-2 bg-bone px-4 py-3 font-sans text-[13px] font-bold uppercase tracking-[0.08em] text-ink-950 transition hover:bg-white"
+                    >
+                      Open dashboard
+                      <ArrowUpRight size={14} weight="bold" />
+                    </Link>
+                  ) : (
+                    <>
+                      <Link
+                        href="/auth/sign-in"
+                        className="inline-flex items-center justify-center border border-white/15 px-4 py-3 font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-bone transition hover:border-white/30"
+                      >
+                        Sign in
+                      </Link>
+                      <Link
+                        href="/auth/sign-up"
+                        className="inline-flex items-center justify-center gap-2 bg-bone px-4 py-3 font-sans text-[13px] font-bold uppercase tracking-[0.08em] text-ink-950 transition hover:bg-white"
+                      >
+                        Sign up
+                        <ArrowUpRight size={14} weight="bold" />
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
             </motion.div>

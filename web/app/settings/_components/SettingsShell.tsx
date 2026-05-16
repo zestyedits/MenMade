@@ -28,14 +28,26 @@ const TABS = [
 export function SettingsShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
+  // Derive the active tab label so the H1 reflects which settings page
+  // the user is actually on — the audit flagged that a bare "Settings"
+  // H1 with an "Account" kicker was ambiguous when the user was on, say,
+  // the Billing tab.
+  const activeIndex = TABS.findIndex(
+    (t) => pathname === t.href || pathname.startsWith(`${t.href}/`),
+  );
+  const safeIndex = activeIndex >= 0 ? activeIndex : 0;
+  const activeTab = TABS[safeIndex];
+  const activeLabel = activeTab?.label ?? "Account";
+  const tabNumber = String(safeIndex + 1).padStart(2, "0");
+
   return (
     <div className="mx-auto w-full max-w-[1280px] px-5 py-7 md:px-10 md:py-10">
       <header className="mb-8">
         <p className="font-mono text-[10.5px] uppercase tracking-[0.32em] text-ember-400/85">
-          Operative / control
+          Settings / {tabNumber} &mdash; {activeLabel}
         </p>
         <h1 className="mt-2 text-balance text-[34px] font-extrabold uppercase leading-[0.95] tracking-tight text-bone md:text-[44px]">
-          Settings
+          {activeLabel}
         </h1>
         <p className="mt-3 max-w-[60ch] text-[14px] leading-relaxed text-ink-200/80">
           Tune the product to your run. Everything stays on this device unless

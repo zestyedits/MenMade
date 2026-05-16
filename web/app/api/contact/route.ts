@@ -53,6 +53,19 @@ export async function POST(request: Request) {
     windowMs: 60 * 60 * 1000,
   });
   if (!verdict.ok) {
+    if (verdict.firstViolation) {
+      try {
+        await recordConcernSignal(createAdminClient(), {
+          kind: "rate_limit_hit",
+          severity: "low",
+          title: "Contact form rate limit hit",
+          body: `IP ${ip} exceeded 5 contact submissions / hour.`,
+          metadata: { ip, bucket: "contact" },
+        });
+      } catch (err) {
+        console.warn("[contact] rate-limit signal write failed:", err);
+      }
+    }
     return Response.json(
       { ok: false, error: "Too many submissions. Try again later." },
       {

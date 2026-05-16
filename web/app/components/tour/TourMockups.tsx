@@ -32,7 +32,7 @@ function MockFrame({ children, label }: { children: React.ReactNode; label: stri
   );
 }
 
-// 1. Enlist — fields auto-fill, button stamps on submit
+// 1. Sign-up — fields auto-fill, button stamps on submit
 export function MockEnlist({ active }: { active: boolean }) {
   const [phase, setPhase] = useState(0);
   useEffect(() => {
@@ -56,10 +56,10 @@ export function MockEnlist({ active }: { active: boolean }) {
   ];
 
   return (
-    <MockFrame label="ENLIST / 001">
+    <MockFrame label="SIGN-UP / 001">
       <div className="flex flex-col gap-4">
         <div className="font-sans text-[16px] font-extrabold uppercase tracking-tight text-bone">
-          Cut a new ID.
+          Create your account.
         </div>
         {fields.map((f) => (
           <div key={f.label} className="flex flex-col gap-1.5">
@@ -93,10 +93,10 @@ export function MockEnlist({ active }: { active: boolean }) {
           {phase >= 4 ? (
             <>
               <CheckCircle size={14} weight="fill" />
-              Enlisted
+              Signed up
             </>
           ) : (
-            "Enlist"
+            "Sign up"
           )}
         </motion.div>
       </div>
@@ -207,7 +207,7 @@ export function MockMatched({ active }: { active: boolean }) {
           Bravo Workshop
         </div>
         <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-300/60">
-          5 operatives &middot; 30-day cycle starts tomorrow
+          5 members &middot; 30-day cycle starts tomorrow
         </div>
         <ul className="grid grid-cols-2 gap-2">
           {matchedSquad.map((m, i) => {
@@ -407,7 +407,7 @@ export function MockFinish({ active }: { active: boolean }) {
           <div>
             <div className="font-mono text-[14px] font-bold text-bone">5/5</div>
             <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-ink-300/60">
-              Operatives
+              Members
             </div>
           </div>
           <div>

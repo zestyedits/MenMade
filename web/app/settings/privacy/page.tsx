@@ -27,7 +27,7 @@ const LOCAL_DATA_LIST = [
   "Field log entries you write",
   "Messages you've sent in squad chat (cached for offline reads)",
   "Reactions, stamps, and reports you've made",
-  "Operatives you've blocked",
+  "Members you've blocked",
   "Your notification, accessibility, and safety preferences",
 ];
 
@@ -208,7 +208,7 @@ export default function PrivacySettingsPage() {
       >
         <Toggle
           label="Share my completions to the cross-squad feed"
-          description="Off by default. Off means you only show up to operatives in squads you've joined."
+          description="Off by default. Off means you only show up to members in squads you've joined."
           checked={prefs.shareSquadActivity}
           onChange={(v) => update("shareSquadActivity", v)}
         />

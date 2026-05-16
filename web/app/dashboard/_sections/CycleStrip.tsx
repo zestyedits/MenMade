@@ -1,7 +1,7 @@
 "use client";
 
 import { LiveDot } from "../../components/ui/LiveDot";
-import { useNow, formatLocalTime, formatElapsed } from "../../lib/useNow";
+import { useNow, formatElapsed } from "../../lib/useNow";
 
 type Props = {
   cycleCode: string;
@@ -47,11 +47,8 @@ export function CycleStrip({
             </span>
           </div>
           <span aria-hidden className="hidden h-3 w-px bg-white/15 md:block" />
-          <span
-            className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-300/60"
-            suppressHydrationWarning
-          >
-            Op / {operativeHandle} &middot; {formatLocalTime(now)} local
+          <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-300/60">
+            @{operativeHandle}
           </span>
         </div>
 

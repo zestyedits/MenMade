@@ -17,7 +17,7 @@ const INK_500 = "#57534e";
 const EMBER_400 = "#ef7b35";
 
 type Section = {
-  /** Top-of-card eyebrow ("Confirm enlistment", "Reset password", etc.) */
+  /** Top-of-card eyebrow ("Confirm email", "Reset password", etc.) */
   eyebrow: string;
   /** Right-aligned mono badge in the header bar */
   headerTag: string;
@@ -31,7 +31,7 @@ type Section = {
   cta: { label: string; href: string } | null;
   /** Small dimmed note below the rule. */
   footnote: string;
-  /** Header label after "MenMade /" — e.g. "Enlist" / "Recovery" / "Restricted". */
+  /** Header label after "MenMade /" — e.g. "Sign-up" / "Recovery" / "Restricted". */
   category: string;
 };
 

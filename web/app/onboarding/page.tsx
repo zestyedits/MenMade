@@ -28,7 +28,14 @@ import {
   type SquadStyle,
 } from "../lib/store";
 
-const TOTAL = 4;
+const STEPS = [
+  { index: "01", kicker: "Focus" },
+  { index: "02", kicker: "Intensity" },
+  { index: "03", kicker: "Squad" },
+  { index: "04", kicker: "Identity" },
+] as const;
+
+const TOTAL = STEPS.length;
 
 const FOCUS_OPTIONS: {
   id: FocusArea;
@@ -84,7 +91,8 @@ const SQUAD_OPTIONS: {
   {
     id: "matched",
     label: "Match me with strangers.",
-    blurb: "Algorithm pairs you with operatives at your intensity and time zone. Easiest start.",
+    blurb:
+      "You start in the Founders Circle — every man enlisted so far. Your focused squad spins off when five men line up at your intensity.",
   },
   {
     id: "invite",
@@ -192,9 +200,39 @@ export default function OnboardingPage() {
     });
     store.markOnboarded();
 
+    // Enroll the new operative in the default starter cycle (P-014) the
+    // first time onboarding completes. Idempotent: if a cycle is already
+    // in progress (e.g. user re-ran onboarding), leave it alone.
+    const existingProgress = store.getProgress();
+    if (!existingProgress.currentCycleCode) {
+      store.setProgress({
+        ...existingProgress,
+        currentCycleCode: "P-014",
+        currentCycleDay: 1,
+        currentCycleStartedAtIso: new Date().toISOString(),
+      });
+    }
+
     // Supabase session already holds the authoritative auth identity.
     // The store sync layer persists handle/displayName to the profiles
     // table and writes preferences/onboarded server-side.
+
+    if (squadStyle === "matched") {
+      // Await the match so the dashboard renders against real squad
+      // membership instead of flashing "No squad yet" while the POST
+      // is still in flight. Failure isn't fatal: /chat re-triggers
+      // the same endpoint if the user lands there without a Circle row.
+      try {
+        await fetch("/api/squads/match", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ focus, intensity, timezone: tz }),
+        });
+      } catch {
+        // Network failure → continue to dashboard, /chat will retry.
+      }
+    }
 
     router.push("/dashboard");
   }
@@ -212,10 +250,10 @@ export default function OnboardingPage() {
           }}
         />
         <div className="relative flex min-h-[100dvh] flex-col p-12">
-          <Logo size="md" />
+          <Logo size="md" href={null} />
 
           <div className="mt-auto flex flex-col gap-6">
-            <MonoLabel rule>Operative / intake</MonoLabel>
+            <MonoLabel rule>Profile setup</MonoLabel>
             <h1 className="max-w-[14ch] text-balance text-[44px] font-extrabold uppercase leading-[0.95] tracking-tight text-bone">
               Four questions.{" "}
               <span className="text-ember-400">No spam ever.</span>
@@ -229,7 +267,7 @@ export default function OnboardingPage() {
             <div className="mt-2 flex items-center gap-3 border-t border-white/[0.06] pt-5">
               <Lock size={14} weight="bold" className="text-ember-400/80" />
               <span className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-ink-300/70">
-                Stays on your device unless you say so
+                Your answers stay private to your squad
               </span>
             </div>
           </div>
@@ -238,10 +276,21 @@ export default function OnboardingPage() {
 
       {/* Form column */}
       <section className="relative flex min-h-[100dvh] flex-col bg-ink-950">
-        {/* Mobile-only logo strip */}
-        <div className="flex items-center justify-between border-b border-white/[0.04] px-5 py-4 lg:hidden">
-          <Logo size="sm" />
-          <MonoLabel>Intake / 0{step + 1}</MonoLabel>
+        {/* Mobile-only context strip. The desktop sidebar names the
+            current intake step; on mobile that sidebar is hidden, so we
+            surface the same "Step N of 4: <name>" here. Without this,
+            mobile users only see a generic "Intake / 02" and don't know
+            what's coming. */}
+        <div className="flex items-center justify-between gap-3 border-b border-white/[0.04] px-5 py-4 lg:hidden">
+          <Logo size="sm" href={null} />
+          <div className="flex flex-col items-end gap-0.5">
+            <MonoLabel>
+              Step {step + 1} of {TOTAL}
+            </MonoLabel>
+            <span className="text-[12px] font-semibold text-bone">
+              {STEPS[step].kicker}
+            </span>
+          </div>
         </div>
 
         {/* Top progress bar */}
@@ -259,9 +308,9 @@ export default function OnboardingPage() {
               <motion.div key={step} className="flex flex-col gap-7">
                 {step === 0 ? (
                   <StepShell
-                    index="01"
+                    index={STEPS[0].index}
                     total={String(TOTAL).padStart(2, "0")}
-                    kicker="Focus"
+                    kicker={STEPS[0].kicker}
                     title="What are you here to do?"
                     hint="Pick one or more. We'll prioritize squads that share at least two of your areas."
                   >
@@ -309,11 +358,11 @@ export default function OnboardingPage() {
 
                 {step === 1 ? (
                   <StepShell
-                    index="02"
+                    index={STEPS[1].index}
                     total={String(TOTAL).padStart(2, "0")}
-                    kicker="Intensity"
+                    kicker={STEPS[1].kicker}
                     title="How hard are you running this?"
-                    hint="Honest is better than ambitious. We match you to operatives at the same dial."
+                    hint="Honest is better than ambitious. We match you to men at the same dial."
                   >
                     <div className="grid grid-cols-1 gap-2.5">
                       {INTENSITY_OPTIONS.map(({ id, label, blurb, joke }) => {
@@ -399,11 +448,11 @@ export default function OnboardingPage() {
 
                 {step === 2 ? (
                   <StepShell
-                    index="03"
+                    index={STEPS[2].index}
                     total={String(TOTAL).padStart(2, "0")}
-                    kicker="Squad"
+                    kicker={STEPS[2].kicker}
                     title="Who are you running with?"
-                    hint="You can change this later. Most operatives start matched and graduate to a private squad after a cycle or two."
+                    hint="You can change this later. Most men start matched and graduate to a private squad after a cycle or two."
                   >
                     <div className="grid grid-cols-1 gap-2.5">
                       {SQUAD_OPTIONS.map(({ id, label, blurb }) => {
@@ -451,9 +500,9 @@ export default function OnboardingPage() {
 
                 {step === 3 ? (
                   <StepShell
-                    index="04"
-                    total={String(TOTAL).padStart(2, "0")}
-                    kicker="Identity"
+                    index={STEPS[3].index}
+                    total={STEPS.length.toString().padStart(2, "0")}
+                    kicker={STEPS[3].kicker}
                     title="What does the squad call you?"
                     hint="Your handle is what your squad sees in the field log. Pick something you'd answer to."
                   >

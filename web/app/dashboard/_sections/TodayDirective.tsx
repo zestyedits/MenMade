@@ -71,12 +71,12 @@ export function TodayDirective({
         </div>
       </header>
 
-      <h1
+      <h2
         id="today-heading"
         className="text-balance text-[24px] font-extrabold uppercase leading-[1.05] tracking-tight text-bone md:text-[30px]"
       >
         {directive}
-      </h1>
+      </h2>
 
       <p className="max-w-[60ch] text-[14px] leading-relaxed text-ink-200/80">
         {detail}

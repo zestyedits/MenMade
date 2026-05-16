@@ -49,7 +49,7 @@ export default function TermsPage() {
         impersonate, don&rsquo;t scrape.
       </p>
       <ul>
-        <li>You will not harass, threaten, or abuse other operatives.</li>
+        <li>You will not harass, threaten, or abuse other members.</li>
         <li>
           You will not falsify field-log entries, photos, or completion data.
         </li>

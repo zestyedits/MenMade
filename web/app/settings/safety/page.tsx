@@ -85,7 +85,7 @@ export default function SafetySettingsPage() {
               value: "collapse",
               label: "Collapse",
               description:
-                "Hide content behind a tap-to-show. Recommended for new operatives.",
+                "Hide content behind a tap-to-show. Recommended for new members.",
             },
             {
               value: "hide",
@@ -100,7 +100,7 @@ export default function SafetySettingsPage() {
 
       <Section
         kicker="02 / Block list"
-        title="Blocked operatives"
+        title="Blocked members"
         description="Blocking hides every message and stamp from this person across all your squads, immediately. They aren't notified."
       >
         {blocked.length === 0 ? (

@@ -110,7 +110,7 @@ export function SettingsTab({ squad, isLead }: Props) {
                 </>
               ) : (
                 <>
-                  Read-only for operatives. Ask your lead (
+                  Read-only for members. Ask your lead (
                   <span className="font-mono text-bone">
                     @{squad.roster.find((r) => r.role === "lead")?.handle}
                   </span>
@@ -157,11 +157,11 @@ export function SettingsTab({ squad, isLead }: Props) {
         <motion.div {...fadeUp(0.2)}>
           <Section
             kicker="03 / Roster"
-            title="Manage operatives"
+            title="Manage members"
             description={
               isLead
-                ? "Invite new operatives, remove inactive ones, or pass the lead. Squad cap is 8."
-                : "Operatives can leave the squad below. Only the lead can invite or remove."
+                ? "Invite new members, remove inactive ones, or pass the lead. Squad cap is 8."
+                : "Members can leave the squad below. Only the lead can invite or remove."
             }
           >
             <div className="flex flex-col gap-3">
@@ -181,20 +181,17 @@ export function SettingsTab({ squad, isLead }: Props) {
                     </div>
                   </div>
                 </div>
-                {isLead ? (
-                  <Button variant="secondary" size="sm" href="#">
-                    Invite
-                  </Button>
-                ) : (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled
-                    onClick={() => undefined}
-                  >
-                    Invite
-                  </Button>
-                )}
+                {/* Invite button is suppressed until the invite endpoint
+                    ships. The lead-only row still surfaces the capability,
+                    but we don't render a dead-link CTA. */}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled
+                  onClick={() => undefined}
+                >
+                  Soon
+                </Button>
               </div>
 
               <div className="flex items-center justify-between gap-3 border border-white/10 bg-ink-900/40 p-4">
@@ -253,7 +250,7 @@ export function SettingsTab({ squad, isLead }: Props) {
                 Removes you from{" "}
                 <span className="font-mono text-bone">{squad.name}</span>. Your
                 field-log entries stay on the squad ledger for the moderation
-                trail. You can re-enlist later if the squad lead invites you
+                trail. You can rejoin later if the squad lead invites you
                 back.
               </>
             }

@@ -32,6 +32,10 @@ export type Identity = {
 export type Progress = {
   currentCycleCode: string | null;
   currentCycleDay: number;
+  /** ISO timestamp of when the current cycle was started — drives the
+   *  CycleStrip "elapsed" counter and decay logic. Null until the user
+   *  enrolls in a cycle (typically at onboarding finish). */
+  currentCycleStartedAtIso: string | null;
   streak: number;
   cyclesCompleted: number;
   totalMinutesLogged: number;
@@ -121,6 +125,7 @@ export const defaultPreferences: Preferences = {
 export const defaultProgress: Progress = {
   currentCycleCode: null,
   currentCycleDay: 0,
+  currentCycleStartedAtIso: null,
   streak: 0,
   cyclesCompleted: 0,
   totalMinutesLogged: 0,

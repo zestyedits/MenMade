@@ -16,11 +16,13 @@ export type ActivityEvent = {
 
 type Props = {
   squadName: string;
+  squadSlug: string | null;
   events: ActivityEvent[];
 };
 
-export function SquadActivity({ squadName, events }: Props) {
+export function SquadActivity({ squadName, squadSlug, events }: Props) {
   const visible = events.slice(0, 8);
+  const hasEvents = visible.length > 0;
 
   return (
     <section
@@ -37,8 +39,19 @@ export function SquadActivity({ squadName, events }: Props) {
             Field activity
           </h2>
         </div>
-        <LiveDot label="Live" />
+        {hasEvents ? <LiveDot label="Live" /> : null}
       </header>
+
+      {visible.length === 0 ? (
+        <div className="flex flex-col items-start gap-1 px-5 py-6">
+          <p className="text-[13px] leading-snug text-ink-200/80">
+            Quiet so far.
+          </p>
+          <p className="text-[12px] leading-snug text-ink-300/70">
+            Your squad&apos;s field activity shows up here as men log work.
+          </p>
+        </div>
+      ) : null}
 
       <ul
         className="divide-y divide-white/[0.05]"
@@ -94,7 +107,7 @@ export function SquadActivity({ squadName, events }: Props) {
           {events.length} events &middot; today
         </span>
         <a
-          href="/squad"
+          href={squadSlug ? `/squads/${squadSlug}` : "/squad"}
           className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-ink-200/70 transition hover:text-bone"
         >
           Open squad &rarr;

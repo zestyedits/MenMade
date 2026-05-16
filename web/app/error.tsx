@@ -3,15 +3,17 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { ArrowClockwise, House } from "@phosphor-icons/react/dist/ssr";
+import * as Sentry from "@sentry/nextjs";
 import { MonoLabel } from "./components/ui/MonoLabel";
 
 /**
  * Segment error boundary. Catches uncaught render errors in any client
- * component below the root layout. Renders an in-brand "field comms cut
- * out" state — never includes the raw error message in the UI (could
- * leak stack traces or PII).
+ * component below the root layout. Renders an in-brand "something broke"
+ * state — never includes the raw error message in the UI (could leak
+ * stack traces or PII).
  *
- * The error is logged server-side via Sentry once Phase 4 wires it.
+ * Sentry captures the error with the digest tag so support can correlate
+ * to a user-visible incident ID.
  */
 export default function ErrorBoundary({
   error,
@@ -22,6 +24,9 @@ export default function ErrorBoundary({
 }) {
   useEffect(() => {
     console.error("[error-boundary]", error);
+    Sentry.captureException(error, {
+      tags: { boundary: "segment", digest: error.digest ?? "unknown" },
+    });
   }, [error]);
 
   return (
@@ -35,14 +40,13 @@ export default function ErrorBoundary({
         }}
       />
       <div className="relative max-w-[600px] text-balance">
-        <MonoLabel rule>System / 500</MonoLabel>
+        <MonoLabel rule>Error / 500</MonoLabel>
         <h1 className="mt-5 font-sans text-[clamp(2rem,5vw,3.6rem)] font-extrabold uppercase leading-[0.95] tracking-tight text-bone">
-          Field comms cut out.
+          Something broke.
         </h1>
         <p className="mt-5 max-w-[55ch] text-[15px] leading-relaxed text-ink-200/80">
-          Something on our end broke. The squad has been notified — we
-          don&rsquo;t need any details from you. Try again, or come back
-          in a few.
+          Something on our end failed. We&rsquo;ve been notified — no
+          details needed from you. Try again, or come back in a few.
         </p>
 
         {error.digest ? (
@@ -65,7 +69,7 @@ export default function ErrorBoundary({
             className="inline-flex items-center gap-2 border border-white/15 px-5 py-3 font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-bone transition hover:border-white/30"
           >
             <House size={13} weight="bold" />
-            Back to base
+            Back home
           </Link>
         </div>
       </div>

@@ -67,11 +67,11 @@ const UPGRADE_SCENARIOS = [
     role: "Squad lead, third cycle",
     frame: "Lead Captain tools + analytics",
     quote:
-      "I was eyeballing who'd flake by Day 14. Now I see the cadence chart. Found two operatives mid-slip, pinged them privately, both finished. Operator paid for the cycle by Day 6.",
+      "I was eyeballing who'd flake by Day 14. Now I see the cadence chart. Found two members mid-slip, pinged them privately, both finished. Operator paid for the cycle by Day 6.",
   },
   {
     handle: "Marcus",
-    role: "Multi-track operative",
+    role: "Multi-track member",
     frame: "Multiple concurrent cycles + custom cycles",
     quote:
       "I wanted a 90-day workshop build running alongside a 30-day writing cycle. Free caps you to one. The custom cycle I built for the writing track wasn't in the templates anyway. Both run now.",
@@ -248,7 +248,7 @@ export default function PricingClient({
                 <header className="border-b border-white/[0.06] pb-4">
                   <MonoLabel>Tier 01</MonoLabel>
                   <h2 className="mt-3 font-sans text-[22px] font-extrabold uppercase tracking-tight text-bone">
-                    Free Operative
+                    Free
                   </h2>
                 </header>
 
@@ -283,7 +283,7 @@ export default function PricingClient({
 
                 <div className="mt-auto pt-6">
                   <Button variant="secondary" fullWidth href="/auth/sign-up">
-                    Enlist for free
+                    Start free
                     <ArrowRight size={13} weight="bold" />
                   </Button>
                 </div>
@@ -296,7 +296,7 @@ export default function PricingClient({
                   className="absolute -top-3 left-7 inline-flex items-center gap-1 bg-ember-400 px-2 py-1 font-mono text-[9.5px] font-bold uppercase tracking-[0.22em] text-ink-950"
                 >
                   <Lightning size={10} weight="fill" />
-                  Most operatives land here
+                  Most men land here
                 </span>
                 <header className="border-b border-white/[0.06] pb-4">
                   <MonoLabel ember>Tier 02</MonoLabel>
@@ -477,7 +477,7 @@ export default function PricingClient({
               <div className="col-span-12 md:col-span-5">
                 <MonoLabel rule>Upgrade triggers</MonoLabel>
                 <h2 className="mt-5 text-balance font-sans text-[clamp(2rem,4vw,3rem)] font-extrabold uppercase leading-[1.02] tracking-tight text-bone">
-                  Why operatives actually upgrade.
+                  Why people actually upgrade.
                 </h2>
               </div>
               <div className="col-span-12 md:col-span-7">

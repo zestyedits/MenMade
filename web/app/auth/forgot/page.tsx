@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           error={error}
-          placeholder="operative@example.com"
+          placeholder="you@example.com"
         />
 
         <Button type="submit" fullWidth disabled={submitting}>

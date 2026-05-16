@@ -46,7 +46,7 @@ export function suspensionNoticeEmail({
     category: "Restricted",
     headerTag: "Action required",
     preheader: "Your MenMade access is paused. Details below.",
-    headline: "Stand down.",
+    headline: "Account paused.",
     bodyHtml: `
       <p style="margin:0 0 14px 0;font-size:14.5px;line-height:1.6;color:#d6d3d1;">
         Your MenMade account has been suspended. You won&rsquo;t be able to

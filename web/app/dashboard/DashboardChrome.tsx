@@ -11,8 +11,8 @@ import {
   SignOut,
   CaretDown,
   GearSix,
-  User,
   ShieldStar,
+  SquaresFour,
 } from "@phosphor-icons/react/dist/ssr";
 import { Logo } from "../components/ui/Logo";
 import { TieredAvatar } from "../components/ui/TieredAvatar";
@@ -51,6 +51,7 @@ function useIsAdmin(): boolean {
 // Nav options are built one at a time. Adding to this array brings the
 // option online in both the desktop top nav and the mobile bottom nav.
 const navOptions = [
+  { href: "/dashboard", label: "Dashboard", Icon: SquaresFour },
   { href: "/chat", label: "Chat", Icon: ChatCircle },
   { href: "/squad", label: "Squad", Icon: UsersThree },
   { href: "/cycles", label: "Cycles", Icon: Compass },
@@ -96,7 +97,7 @@ export function DashboardChrome({
     >
       <header className="sticky top-0 z-30 border-b border-white/[0.05] bg-ink-950/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between px-5 md:px-10">
-          <Logo size="md" />
+          <Logo size="md" href="/dashboard" />
 
           {/* Desktop nav options */}
           {navOptions.length > 0 ? (
@@ -158,7 +159,7 @@ export function DashboardChrome({
                 >
                   <div className="border-b border-white/[0.06] px-4 py-3">
                     <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-ink-300/60">
-                      Operative
+                      Account
                     </div>
                     <div className="mt-1 truncate text-[13px] font-medium text-bone">
                       {session.name}
@@ -176,15 +177,6 @@ export function DashboardChrome({
                       </div>
                     ) : null}
                   </div>
-                  <Link
-                    href="/dashboard"
-                    role="menuitem"
-                    onClick={() => setMenuOpen(false)}
-                    className="flex w-full items-center justify-between border-t border-white/[0.06] px-4 py-2.5 text-left text-[13px] text-bone/85 transition hover:bg-white/[0.04] hover:text-bone"
-                  >
-                    Dashboard
-                    <User size={14} weight="bold" />
-                  </Link>
                   <Link
                     href="/settings"
                     role="menuitem"

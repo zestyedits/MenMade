@@ -91,7 +91,9 @@ function SignInInner() {
       <header className="flex flex-col gap-3">
         <MonoLabel ember>Sign in / 001</MonoLabel>
         <h1 className="text-[34px] font-extrabold uppercase leading-[0.95] tracking-tight text-bone md:text-[40px]">
-          Report for duty.
+          {banner === "confirm-email" || banner === "confirmed"
+            ? "Almost in."
+            : "Welcome back."}
         </h1>
         <p className="text-[14px] leading-relaxed text-ink-200/75">
           The cycle started without you. Catch up.
@@ -241,7 +243,7 @@ function SignInInner() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           error={errors.email}
-          placeholder="operative@example.com"
+          placeholder="you@example.com"
         />
 
         <div className="flex flex-col gap-2">
@@ -288,7 +290,7 @@ function SignInInner() {
           disabled={submitting}
           className="mt-2"
         >
-          {submitting ? "Authenticating..." : "Enlist"}
+          {submitting ? "Signing in..." : "Sign in"}
           {!submitting ? <ArrowRight size={14} weight="bold" /> : null}
         </Button>
       </form>
@@ -299,7 +301,7 @@ function SignInInner() {
           href="/auth/sign-up"
           className="font-medium text-bone underline underline-offset-4 decoration-bone/40 hover:decoration-bone"
         >
-          Cut a new ID.
+          Create an account.
         </Link>
       </p>
     </div>

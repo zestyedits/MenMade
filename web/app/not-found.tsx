@@ -28,9 +28,9 @@ export default function NotFound() {
         <section className="relative mx-auto flex min-h-[calc(100dvh-4rem)] max-w-[1400px] flex-col justify-center px-5 py-20 md:px-10 md:py-28">
           <div className="grid grid-cols-12 items-end gap-x-6 gap-y-10">
             <div className="col-span-12 md:col-span-7">
-              <MonoLabel rule>Field report / 404</MonoLabel>
+              <MonoLabel rule>Error / 404</MonoLabel>
               <h1 className="mt-5 text-balance font-sans text-[clamp(3rem,9vw,8rem)] font-extrabold uppercase leading-[0.9] tracking-tight text-bone">
-                <span className="text-ember-400">Off-grid.</span>
+                <span className="text-ember-400">Page not found.</span>
               </h1>
               <h2 className="mt-4 text-balance font-sans text-[clamp(1.4rem,3vw,2.2rem)] font-bold uppercase leading-tight tracking-tight text-bone">
                 The page you&rsquo;re looking for isn&rsquo;t where you left
@@ -49,7 +49,7 @@ export default function NotFound() {
                   href="/"
                   className="tactile group inline-flex items-center justify-between gap-2 bg-bone px-5 py-3 font-sans text-[13px] font-bold uppercase tracking-[0.12em] text-ink-950 transition hover:bg-white"
                 >
-                  Back to base
+                  Back home
                   <ArrowRight
                     size={14}
                     weight="bold"
@@ -57,10 +57,10 @@ export default function NotFound() {
                   />
                 </Link>
                 <Link
-                  href="/cycles"
+                  href="/how-it-works"
                   className="inline-flex items-center justify-between gap-2 border border-white/15 px-5 py-3 font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-bone transition hover:border-white/30"
                 >
-                  Browse cycles
+                  How it works
                   <MagnifyingGlass size={13} weight="bold" />
                 </Link>
                 <Link
@@ -83,7 +83,7 @@ export default function NotFound() {
             <span aria-hidden className="h-3 w-px bg-white/15" />
             <span>Not found</span>
             <span aria-hidden className="h-3 w-px bg-white/15" />
-            <span>No squad on file at this address</span>
+            <span>Nothing on file at this address</span>
           </div>
         </section>
       </main>

@@ -8,23 +8,18 @@ const cols = [
       ["The case", "/#impact"],
       ["How it works", "/how-it-works"],
       ["Pricing", "/pricing"],
-      ["Squads", "/#proof"],
+      ["Field log", "/#proof"],
     ],
   },
   {
     title: "Company",
-    links: [
-      ["About", "#"],
-      ["Manifesto", "#"],
-      ["Contact", "/contact"],
-    ],
+    links: [["Contact", "/contact"]],
   },
   {
     title: "Legal",
     links: [
       ["Privacy", "/privacy"],
       ["Terms", "/terms"],
-      ["Contact", "/contact"],
     ],
   },
 ];
@@ -75,9 +70,6 @@ export function Footer() {
         <div className="mt-16 flex flex-col items-start justify-between gap-4 border-t border-white/[0.06] pt-6 md:flex-row md:items-center">
           <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-300/60">
             &copy; 2026 MenMade Co. &mdash; built in the open
-          </div>
-          <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-300/60">
-            Stop scrolling. Start cycling.
           </div>
         </div>
       </div>

@@ -140,6 +140,7 @@ async function syncProgress(): Promise<void> {
       user_id: user.id,
       current_cycle_code: p.currentCycleCode,
       current_cycle_day: p.currentCycleDay,
+      current_cycle_started_at: p.currentCycleStartedAtIso,
       streak: p.streak,
       cycles_completed: p.cyclesCompleted,
       total_minutes_logged: p.totalMinutesLogged,
@@ -345,7 +346,13 @@ export async function hydrateStoreFromServer(): Promise<void> {
       timezone: prefs.data.timezone,
     };
     writeLocal("preferences", p);
-    writeLocal("onboarded", Boolean(prefs.data.onboarded));
+    // Onboarded is a monotonic latch: once a user has finished onboarding
+    // locally, they're done. Don't let hydrate overwrite that with a stale
+    // server `false` if the debounced syncOnboarded hasn't fired yet —
+    // that race kicked completed users back to /onboarding via AuthGuard.
+    const localOnboarded = readLocal<boolean>("onboarded", false);
+    const serverOnboarded = Boolean(prefs.data.onboarded);
+    writeLocal("onboarded", localOnboarded || serverOnboarded);
   }
 
   // Progress
@@ -353,6 +360,7 @@ export async function hydrateStoreFromServer(): Promise<void> {
     const p: Progress = {
       currentCycleCode: progress.data.current_cycle_code,
       currentCycleDay: progress.data.current_cycle_day,
+      currentCycleStartedAtIso: progress.data.current_cycle_started_at,
       streak: progress.data.streak,
       cyclesCompleted: progress.data.cycles_completed,
       totalMinutesLogged: progress.data.total_minutes_logged,

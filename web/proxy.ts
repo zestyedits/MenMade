@@ -55,6 +55,13 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isApi = pathname.startsWith("/api/");
 
+  // The Sentry tunnel route forwards browser-emitted events to Sentry's
+  // ingest endpoint. It must not pass through auth gates or session
+  // refresh — both would corrupt the request body and break ingestion.
+  if (pathname === "/monitoring" || pathname.startsWith("/monitoring/")) {
+    return NextResponse.next();
+  }
+
   // ---------- 1. Origin allow-list for state-changing /api/* requests
   // The Stripe webhook is intentionally exempt: Stripe's servers
   // are the caller, they send no Origin header (so the `if (origin)`
@@ -139,6 +146,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!monitoring|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

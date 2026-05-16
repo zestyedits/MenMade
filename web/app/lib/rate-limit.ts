@@ -11,7 +11,7 @@
  * IP-spray DoS (oldest entries pruned).
  */
 
-type Entry = { count: number; resetAt: number };
+type Entry = { count: number; resetAt: number; signaled?: boolean };
 
 const buckets = new Map<string, Entry>();
 const MAX_ENTRIES = 10_000;
@@ -28,6 +28,9 @@ export type RateLimitVerdict = {
   ok: boolean;
   remaining: number;
   retryAfterSeconds: number;
+  /** True only on the first violation within this window. Lets callers
+   *  emit one Buddy signal per (key, ip, window) without spamming. */
+  firstViolation: boolean;
 };
 
 export function rateLimit(opts: {
@@ -43,14 +46,22 @@ export function rateLimit(opts: {
   if (!existing || existing.resetAt <= now) {
     pruneIfFull();
     buckets.set(key, { count: 1, resetAt: now + opts.windowMs });
-    return { ok: true, remaining: opts.limit - 1, retryAfterSeconds: 0 };
+    return {
+      ok: true,
+      remaining: opts.limit - 1,
+      retryAfterSeconds: 0,
+      firstViolation: false,
+    };
   }
 
   if (existing.count >= opts.limit) {
+    const firstViolation = !existing.signaled;
+    existing.signaled = true;
     return {
       ok: false,
       remaining: 0,
       retryAfterSeconds: Math.ceil((existing.resetAt - now) / 1000),
+      firstViolation,
     };
   }
 
@@ -59,6 +70,7 @@ export function rateLimit(opts: {
     ok: true,
     remaining: opts.limit - existing.count,
     retryAfterSeconds: 0,
+    firstViolation: false,
   };
 }
 

@@ -3,6 +3,7 @@ import { createClient } from "../../../lib/supabase/server";
 import { createAdminClient } from "../../../lib/supabase/admin";
 import { getStripe, getPriceId } from "../../../lib/stripe";
 import { getClientIp, rateLimit } from "../../../lib/rate-limit";
+import { recordConcernSignal } from "../../../lib/admin-audit";
 
 /**
  * POST /api/billing/checkout
@@ -44,6 +45,19 @@ export async function POST(request: NextRequest) {
     windowMs: 10 * 60 * 1000,
   });
   if (!verdict.ok) {
+    if (verdict.firstViolation) {
+      try {
+        await recordConcernSignal(createAdminClient(), {
+          kind: "rate_limit_hit",
+          severity: "medium",
+          title: "Checkout rate limit hit",
+          body: `IP ${ip} exceeded 10 checkout attempts / 10 min — possible card-testing.`,
+          metadata: { ip, bucket: "billing-checkout" },
+        });
+      } catch (err) {
+        console.warn("[billing/checkout] rate-limit signal write failed:", err);
+      }
+    }
     return NextResponse.json(
       { ok: false, error: "Too many checkout attempts. Try again shortly." },
       {

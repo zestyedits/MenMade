@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Pricing — MenMade",
     description:
-      "Free Operative tier permanent. Operator at $14/mo or $129/yr. Founder's Pass at $299 (500 seats).",
+      "Free tier permanent. Operator at $14/mo or $129/yr. Founder's Pass at $299 (500 seats).",
     type: "website",
   },
 };

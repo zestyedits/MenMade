@@ -84,6 +84,16 @@ function ResetPasswordInner() {
     // Explicit PKCE code exchange — runs in parallel with the SDK's own
     // detectSessionInUrl. If both fire, our arm() is idempotent.
     const code = queryParams.get("code");
+    // Helper: only flip to "expired" if we haven't already armed. The
+    // supabase/ssr browser client auto-detects `?code=` and exchanges it,
+    // firing SIGNED_IN before our explicit exchange runs. The explicit
+    // exchange then fails (code is single-use) and used to clobber the
+    // success state with "expired." This guard prevents that race.
+    function failIfNotArmed() {
+      if (resolved) return;
+      setPhase("expired");
+    }
+
     if (code) {
       supabase.auth
         .exchangeCodeForSession(code)
@@ -94,7 +104,7 @@ function ResetPasswordInner() {
           }) => {
             if (result.error) {
               console.warn("[reset-password] code exchange failed:", result.error);
-              setPhase("expired");
+              failIfNotArmed();
               return;
             }
             arm(result.data.session);
@@ -102,7 +112,7 @@ function ResetPasswordInner() {
         )
         .catch((err: unknown) => {
           console.warn("[reset-password] code exchange threw:", err);
-          setPhase("expired");
+          failIfNotArmed();
         });
     }
 
@@ -114,9 +124,7 @@ function ResetPasswordInner() {
       });
 
     // 12s timeout — gives slow Codespace networks room.
-    const timeout = setTimeout(() => {
-      if (!resolved) setPhase("expired");
-    }, 12000);
+    const timeout = setTimeout(failIfNotArmed, 12000);
 
     return () => {
       sub.subscription.unsubscribe();
@@ -157,6 +165,11 @@ function ResetPasswordInner() {
     return (
       <div className="flex flex-col items-center gap-6 py-10 text-center">
         <MonoLabel ember>Verifying</MonoLabel>
+        <div className="flex items-center gap-2">
+          <Dot delay="0s" />
+          <Dot delay="0.16s" />
+          <Dot delay="0.32s" />
+        </div>
         <p className="max-w-sm text-[13.5px] leading-relaxed text-ink-300/80">
           Confirming the recovery link.
         </p>
@@ -279,5 +292,14 @@ function ResetPasswordInner() {
         </span>
       </p>
     </div>
+  );
+}
+
+function Dot({ delay }: { delay: string }) {
+  return (
+    <span
+      className="inline-block size-1.5 rounded-full bg-ember-400/80 animate-pulse"
+      style={{ animationDelay: delay }}
+    />
   );
 }

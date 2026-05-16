@@ -45,7 +45,7 @@ export const PLAN_FEATURES: Record<
   }
 > = {
   free: {
-    label: "Free Operative",
+    label: "Free",
     activeSquadsCap: 3,
     concurrentCycles: 1,
     customCycles: false,

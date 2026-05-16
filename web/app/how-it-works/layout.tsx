@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "How it works — MenMade",
   description:
-    "Five moves: enlist, take the brief, get matched, run the cycle, finish or get out. Walk the loop before you start.",
+    "Five moves: sign up, take the brief, get matched, run the cycle, finish or get out. Walk the loop before you start.",
   alternates: { canonical: "/how-it-works" },
   openGraph: {
     title: "How it works — MenMade",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 
 /**
  * Root error boundary. Catches errors that escape the root layout
@@ -19,6 +20,10 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error("[global-error]", error);
+    Sentry.captureException(error, {
+      tags: { boundary: "root", digest: error.digest ?? "unknown" },
+      level: "fatal",
+    });
   }, [error]);
 
   return (
@@ -47,7 +52,7 @@ export default function GlobalError({
               color: "#ef7b35cc",
             }}
           >
-            System / hard fault
+            Error / hard fault
           </p>
           <h1
             style={{
@@ -59,7 +64,7 @@ export default function GlobalError({
               letterSpacing: "-0.01em",
             }}
           >
-            Off-grid.
+            Something hit the floor.
           </h1>
           <p
             style={{
@@ -70,7 +75,7 @@ export default function GlobalError({
             }}
           >
             We&rsquo;ve hit a fault we can&rsquo;t recover in place.
-            Reload the page. If it persists, the squad is on it.
+            Reload the page. If it persists, we&rsquo;re on it.
           </p>
           {error.digest ? (
             <p

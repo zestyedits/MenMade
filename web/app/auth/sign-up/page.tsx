@@ -55,6 +55,9 @@ export default function SignUpPage() {
       setSubmitting(false);
       return;
     }
+    // Fire-and-forget Buddy ping. The server tracks bursts per IP so an
+    // attacker pumping signups becomes visible without slowing this flow.
+    fetch("/api/auth/signup-signal", { method: "POST" }).catch(() => {});
     // With email confirmation ON in Supabase, there's no session yet —
     // route to sign-in with a banner. If confirmation is off, the user
     // has a session immediately, send them straight into onboarding.
@@ -78,12 +81,12 @@ export default function SignUpPage() {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-3">
-        <MonoLabel ember>Enlist / 001</MonoLabel>
+        <MonoLabel ember>Sign up / 001</MonoLabel>
         <h1 className="text-[34px] font-extrabold uppercase leading-[0.95] tracking-tight text-bone md:text-[40px]">
-          Cut a new ID.
+          Create your account.
         </h1>
         <p className="text-[14px] leading-relaxed text-ink-200/75">
-          Two minutes of intake. Then you&rsquo;re in a squad.
+          Two minutes of setup. Then you&rsquo;re in a squad.
         </p>
       </header>
 
@@ -168,7 +171,7 @@ export default function SignUpPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           error={errors.email}
-          placeholder="operative@example.com"
+          placeholder="you@example.com"
         />
         <Input
           label="Password"
@@ -182,12 +185,12 @@ export default function SignUpPage() {
         />
 
         <Button type="submit" fullWidth disabled={submitting} className="mt-2">
-          {submitting ? "Enlisting..." : "Enlist"}
+          {submitting ? "Creating account..." : "Create account"}
           {!submitting ? <ArrowRight size={14} weight="bold" /> : null}
         </Button>
 
         <p className="text-center text-[12px] leading-relaxed text-ink-300/70">
-          By enlisting you agree to our{" "}
+          By signing up you agree to our{" "}
           <Link
             href="/terms"
             className="text-bone underline underline-offset-4 decoration-bone/40 hover:decoration-bone"
@@ -206,12 +209,12 @@ export default function SignUpPage() {
       </form>
 
       <p className="text-center text-[13px] text-ink-300/80">
-        Already enlisted?{" "}
+        Already have an account?{" "}
         <Link
           href="/auth/sign-in"
           className="font-medium text-bone underline underline-offset-4 decoration-bone/40 hover:decoration-bone"
         >
-          Report for duty.
+          Sign in.
         </Link>
       </p>
     </div>

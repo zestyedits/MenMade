@@ -125,7 +125,7 @@ export function PricingShowcase() {
             </div>
 
             <h3 className="mt-5 font-sans text-[20px] font-extrabold uppercase tracking-tight text-bone">
-              Free Operative
+              Free
             </h3>
 
             <div className="mt-5 flex items-baseline gap-2">
@@ -183,7 +183,7 @@ export function PricingShowcase() {
               className="absolute -top-3 left-7 inline-flex items-center gap-1 bg-ember-400 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-ink-950"
             >
               <Lightning size={11} weight="fill" />
-              Most operatives land here
+              Most men land here
             </span>
 
             <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">

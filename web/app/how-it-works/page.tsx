@@ -395,7 +395,7 @@ export default function HowItWorksPage() {
               </div>
               <div className="col-span-12 flex flex-col gap-3 md:col-span-4 md:col-start-9">
                 <Button size="lg" fullWidth href="/auth/sign-up">
-                  Enlist for free
+                  Start free
                   <ArrowRight size={14} weight="bold" />
                 </Button>
                 <Button

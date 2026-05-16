@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChatHeader } from "./_components/ChatHeader";
 import { MessageList } from "./_components/MessageList";
@@ -8,44 +8,100 @@ import { Composer } from "./_components/Composer";
 import { CodeOfConductSheet } from "./_components/CodeOfConductSheet";
 import { Roster } from "./_components/Roster";
 import { SquadList } from "./_components/SquadList";
-import { mySquads, getSquad } from "./_data/seed";
+import type { Squad, RosterMember } from "./_data/seed";
 import type { ModerationVerdict } from "./_data/moderation";
 import type { Stamp } from "./_data/stamps";
 import { store, type ChatMessage, type ChatReaction } from "../lib/store";
 import { getSession } from "../lib/auth";
+import {
+  useMySquads,
+  useMessages,
+  useRoster,
+  useChatTail,
+  sendMessage,
+  reportMessage,
+  type MySquadRow,
+  type RosterRow,
+} from "../lib/use-chat";
+import { MonoLabel } from "../components/ui/MonoLabel";
 
-type SquadState = {
-  messages: ChatMessage[];
-  reportedIds: string[];
-};
+// MySquadRow → Squad adapter so the existing SquadList component keeps working
+// without a signature change. Roster / replyPool / seedMessages are unused
+// downstream of SquadList; we stub them.
+function toSquad(row: MySquadRow): Squad {
+  return {
+    callsign: row.handle,
+    name: row.name,
+    blurb: row.blurb ?? "",
+    cycleCode: row.cycleCode ?? "",
+    cycleDay: row.cycleDay ?? 1,
+    totalDays: row.totalDays ?? 0,
+    intensity: "STEADY",
+    focus: "",
+    roster: [],
+    seedMessages: [],
+    replyPool: [],
+  };
+}
+
+function toRosterMember(r: RosterRow): RosterMember {
+  return {
+    handle: r.handle,
+    name: r.displayName,
+    role: r.role === "lead" ? "lead" : "op",
+    online: false,
+    lastSeenMin: 0,
+    streak: 0,
+    tz: "",
+  };
+}
 
 function ChatBody() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const squads = useMemo(() => mySquads(), []);
-  const defaultCallsign = squads[0]?.callsign ?? "";
+  const { squads: rawSquads, loading: squadsLoading } = useMySquads();
+  const squads = useMemo(() => rawSquads.map(toSquad), [rawSquads]);
+  const defaultHandle = rawSquads[0]?.handle ?? "";
   const queryCallsign = searchParams.get("s");
 
-  // Resolve the active squad. Falls back to the first if missing/invalid.
-  const activeCallsign = useMemo(() => {
-    if (queryCallsign && squads.some((s) => s.callsign === queryCallsign))
+  const activeHandle = useMemo(() => {
+    if (queryCallsign && rawSquads.some((s) => s.handle === queryCallsign))
       return queryCallsign;
-    return defaultCallsign;
-  }, [queryCallsign, squads, defaultCallsign]);
-  const activeSquad = getSquad(activeCallsign);
+    return defaultHandle;
+  }, [queryCallsign, rawSquads, defaultHandle]);
 
-  // Per-squad state, keyed by callsign. Hydrated lazily as squads are visited.
-  const [squadStates, setSquadStates] = useState<Record<string, SquadState>>({});
+  const activeRow = rawSquads.find((s) => s.handle === activeHandle) ?? null;
+  const showStream = Boolean(queryCallsign && activeRow);
+
+  const {
+    messages: liveMessages,
+    appendOptimistic,
+    replaceOptimistic,
+    removeOptimistic,
+    upsertFromRealtime,
+    reactLocally,
+  } = useMessages(activeHandle || null);
+
+  const { members: roster } = useRoster(activeHandle || null);
+
+  // Drive incremental fetch off the latest message we already have. The
+  // server only returns rows with sent_at > cursor, so we don't re-pull
+  // history on every tick.
+  const latestSentAt =
+    liveMessages.length > 0
+      ? liveMessages[liveMessages.length - 1].sentAtIso
+      : null;
+  useChatTail(activeHandle || null, latestSentAt, (incoming) => {
+    for (const msg of incoming) upsertFromRealtime(msg);
+  });
+
   const [myHandle, setMyHandle] = useState("you");
   const [myName, setMyName] = useState("You");
   const [blockedHandles, setBlockedHandles] = useState<string[]>([]);
   const [cocOpen, setCocOpen] = useState(false);
   const [cocAcked, setCocAcked] = useState(true);
-  // Mobile drill-down: when no `?s=`, show the squad list. Tapping a squad
-  // pushes ?s=callsign and the stream view appears.
-  const showStream = Boolean(queryCallsign && activeSquad);
+  const [sendError, setSendError] = useState<string | null>(null);
 
-  // Mount: hydrate identity, blocks, COC, and seed all squad states from store.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -64,135 +120,50 @@ function ChatBody() {
     const acked = store.hasAcknowledgedChatCOC();
     setCocAcked(acked);
     if (!acked) setCocOpen(true);
-
-    const initial: Record<string, SquadState> = {};
-    squads.forEach((sq) => {
-      const persisted = store.getChatMessages(sq.callsign);
-      initial[sq.callsign] = {
-        messages: persisted.length > 0 ? persisted : sq.seedMessages,
-        reportedIds: store.getReportedMessageIds(sq.callsign),
-      };
-    });
-    setSquadStates(initial);
-
     return () => {
       cancelled = true;
     };
-  }, [squads]);
+  }, []);
 
-  // Persist active squad (purely for the dashboard widgets that may want it).
   useEffect(() => {
-    if (activeCallsign) store.setActiveSquad(activeCallsign);
-  }, [activeCallsign]);
+    if (activeHandle) store.setActiveSquad(activeHandle);
+  }, [activeHandle]);
 
-  // Persist messages whenever they change.
-  useEffect(() => {
-    Object.entries(squadStates).forEach(([cs, st]) => {
-      if (st.messages.length === 0) return;
-      store.setChatMessages(cs, st.messages);
-    });
-  }, [squadStates]);
+  const visibleMessages = useMemo(
+    () => liveMessages.filter((m) => !blockedHandles.includes(m.authorHandle)),
+    [liveMessages, blockedHandles],
+  );
 
-  // Drip simulated replies into ALL squads, not just the active one — so
-  // when the user comes back to a quiet squad, it has new traffic.
-  const tickRefs = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  useEffect(() => {
-    function scheduleFor(callsign: string) {
-      const wait = 35_000 + Math.random() * 75_000;
-      const t = setTimeout(() => {
-        const sq = getSquad(callsign);
-        if (!sq) return;
-        const pick =
-          sq.replyPool[Math.floor(Math.random() * sq.replyPool.length)];
-        setSquadStates((prev) => {
-          const cur = prev[callsign];
-          if (!cur) return prev;
-          return {
-            ...prev,
-            [callsign]: {
-              ...cur,
-              messages: [
-                ...cur.messages,
-                {
-                  id: `sim-${callsign}-${Date.now()}-${Math.random()
-                    .toString(36)
-                    .slice(2, 6)}`,
-                  authorHandle: pick.authorHandle,
-                  authorName: pick.authorName,
-                  body: pick.body,
-                  sentAtIso: new Date().toISOString(),
-                },
-              ],
-            },
-          };
-        });
-        scheduleFor(callsign);
-      }, wait);
-      tickRefs.current.set(callsign, t);
-    }
+  const recentByMe = useMemo(
+    () =>
+      liveMessages
+        .filter((m) => m.authorHandle === myHandle)
+        .slice(-6)
+        .map((m) => ({ body: m.body, sentAtIso: m.sentAtIso })),
+    [liveMessages, myHandle],
+  );
 
-    squads.forEach((s) => scheduleFor(s.callsign));
-    return () => {
-      tickRefs.current.forEach((t) => clearTimeout(t));
-      tickRefs.current.clear();
-    };
-  }, [squads]);
+  const onlineCount = Math.max(roster.length, 1);
+  const totalCount = roster.length;
 
-  const visibleMessages = useMemo(() => {
-    if (!activeSquad) return [];
-    const all = squadStates[activeSquad.callsign]?.messages ?? [];
-    return all.filter((m) => !blockedHandles.includes(m.authorHandle));
-  }, [squadStates, activeSquad, blockedHandles]);
-
-  const recentByMe = useMemo(() => {
-    if (!activeSquad) return [];
-    return (squadStates[activeSquad.callsign]?.messages ?? [])
-      .filter((m) => m.authorHandle === myHandle)
-      .slice(-6)
-      .map((m) => ({ body: m.body, sentAtIso: m.sentAtIso }));
-  }, [squadStates, activeSquad, myHandle]);
-
-  const onlineCount = activeSquad
-    ? activeSquad.roster.filter(
-        (m) => m.online && !blockedHandles.includes(m.handle),
-      ).length + 1
-    : 0;
-  const totalCount = activeSquad ? activeSquad.roster.length + 1 : 0;
-
-  // Last-message + unread map for the squad rail.
   const railData = useMemo(() => {
-    const lastBy: Record<string, { authorName: string; body: string; sentAtIso: string } | null> = {};
+    const lastBy: Record<
+      string,
+      { authorName: string; body: string; sentAtIso: string } | null
+    > = {};
     const unreadBy: Record<string, number> = {};
-    squads.forEach((s) => {
-      const list = squadStates[s.callsign]?.messages ?? [];
-      const visible = list.filter((m) => !blockedHandles.includes(m.authorHandle));
-      const last = visible[visible.length - 1];
-      lastBy[s.callsign] = last
-        ? {
-            authorName: last.authorHandle === myHandle ? "You" : last.authorName,
-            body: last.body,
-            sentAtIso: last.sentAtIso,
-          }
+    rawSquads.forEach((s) => {
+      lastBy[s.handle] = s.lastMessageAt
+        ? { authorName: "—", body: "", sentAtIso: s.lastMessageAt }
         : null;
-      // No real unread tracking yet — count messages from others in the
-      // last 5 min if this is NOT the active squad. Cheap proxy.
-      if (s.callsign === activeCallsign) {
-        unreadBy[s.callsign] = 0;
-      } else {
-        const cutoff = Date.now() - 5 * 60_000;
-        unreadBy[s.callsign] = visible.filter(
-          (m) =>
-            m.authorHandle !== myHandle &&
-            new Date(m.sentAtIso).getTime() > cutoff,
-        ).length;
-      }
+      unreadBy[s.handle] = 0;
     });
     return { lastBy, unreadBy };
-  }, [squads, squadStates, blockedHandles, activeCallsign, myHandle]);
+  }, [rawSquads]);
 
   const handleSelectSquad = useCallback(
-    (callsign: string) => {
-      router.push(`/chat?s=${encodeURIComponent(callsign)}`);
+    (handle: string) => {
+      router.push(`/chat?s=${encodeURIComponent(handle)}`);
     },
     [router],
   );
@@ -202,89 +173,88 @@ function ChatBody() {
   }, [router]);
 
   const handleSend = useCallback(
-    (body: string, verdict: ModerationVerdict) => {
-      if (!activeSquad) return;
-      const newMsg: ChatMessage = {
-        id: `me-${activeSquad.callsign}-${Date.now()}-${Math.random()
-          .toString(36)
-          .slice(2, 6)}`,
+    async (body: string, _clientVerdict: ModerationVerdict) => {
+      if (!activeHandle) return;
+      const optimisticId = `opt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const optimistic: ChatMessage = {
+        id: optimisticId,
         authorHandle: myHandle,
         authorName: myName,
         body,
         sentAtIso: new Date().toISOString(),
-        softFlagged: verdict === "soft-warn",
       };
-      setSquadStates((prev) => ({
-        ...prev,
-        [activeSquad.callsign]: {
-          ...prev[activeSquad.callsign],
-          messages: [...(prev[activeSquad.callsign]?.messages ?? []), newMsg],
-        },
-      }));
+      appendOptimistic(optimistic);
+      setSendError(null);
+
+      const res = await sendMessage({ squad: activeHandle, body });
+      if (res.ok) {
+        replaceOptimistic(optimisticId, res.message);
+      } else {
+        removeOptimistic(optimisticId);
+        setSendError(
+          res.reason ?? res.error ?? "Couldn't send. Try again shortly.",
+        );
+      }
     },
-    [activeSquad, myHandle, myName],
+    [
+      activeHandle,
+      myHandle,
+      myName,
+      appendOptimistic,
+      replaceOptimistic,
+      removeOptimistic,
+    ],
   );
 
   const handleSendStamp = useCallback(
-    (stamp: Stamp) => {
-      if (!activeSquad) return;
-      const newMsg: ChatMessage = {
-        id: `me-${activeSquad.callsign}-stamp-${Date.now()}-${Math.random()
-          .toString(36)
-          .slice(2, 6)}`,
+    async (stamp: Stamp) => {
+      if (!activeHandle) return;
+      const optimisticId = `opt-stamp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      const optimistic: ChatMessage = {
+        id: optimisticId,
         authorHandle: myHandle,
         authorName: myName,
         body: "",
         stampId: stamp.id,
         sentAtIso: new Date().toISOString(),
       };
-      setSquadStates((prev) => ({
-        ...prev,
-        [activeSquad.callsign]: {
-          ...prev[activeSquad.callsign],
-          messages: [...(prev[activeSquad.callsign]?.messages ?? []), newMsg],
-        },
-      }));
+      appendOptimistic(optimistic);
+      const res = await sendMessage({
+        squad: activeHandle,
+        body: ` `,
+        stampId: stamp.id,
+      });
+      if (res.ok) replaceOptimistic(optimisticId, res.message);
+      else removeOptimistic(optimisticId);
     },
-    [activeSquad, myHandle, myName],
+    [
+      activeHandle,
+      myHandle,
+      myName,
+      appendOptimistic,
+      replaceOptimistic,
+      removeOptimistic,
+    ],
   );
 
   const handleReact = useCallback(
     (id: string, reaction: ChatReaction) => {
-      if (!activeSquad) return;
-      setSquadStates((prev) => {
-        const cur = prev[activeSquad.callsign];
-        if (!cur) return prev;
-        return {
-          ...prev,
-          [activeSquad.callsign]: {
-            ...cur,
-            messages: cur.messages.map((m) => {
-              if (m.id !== id) return m;
-              const next = { ...m.reactions };
-              next[reaction] = (next[reaction] ?? 0) + 1;
-              return { ...m, reactions: next };
-            }),
-          },
-        };
-      });
+      reactLocally(id, reaction);
+      // Server-side reaction persistence is Phase 3b — this is local-only.
     },
-    [activeSquad],
+    [reactLocally],
   );
 
+  const [reportedIds, setReportedIds] = useState<string[]>([]);
   const handleReport = useCallback(
-    (id: string) => {
-      if (!activeSquad) return;
-      store.reportMessage(activeSquad.callsign, id);
-      setSquadStates((prev) => ({
-        ...prev,
-        [activeSquad.callsign]: {
-          ...prev[activeSquad.callsign],
-          reportedIds: store.getReportedMessageIds(activeSquad.callsign),
-        },
-      }));
+    async (id: string) => {
+      setReportedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+      const res = await reportMessage(id);
+      if (!res.ok) {
+        setReportedIds((prev) => prev.filter((x) => x !== id));
+      }
     },
-    [activeSquad],
+    [],
   );
 
   const handleBlock = useCallback((handle: string) => {
@@ -297,26 +267,27 @@ function ChatBody() {
     setCocAcked(true);
   }, []);
 
-  const reportedIds = activeSquad
-    ? squadStates[activeSquad.callsign]?.reportedIds ?? []
-    : [];
-
-  // No squads at all — empty state.
-  if (squads.length === 0) {
+  if (!squadsLoading && squads.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center px-5 py-12">
-        <div className="max-w-[40ch] text-center">
+        <div className="flex max-w-[44ch] flex-col items-center gap-3 text-center">
+          <MonoLabel ember>Chat / Channels</MonoLabel>
           <p className="font-mono text-[10.5px] uppercase tracking-[0.32em] text-ember-400/85">
-            No squads on file
+            Awaiting match
           </p>
-          <p className="mt-3 text-[15px] leading-relaxed text-ink-200/80">
-            You haven&rsquo;t enlisted yet. Pick a cycle to get matched.
+          <h1 className="text-[22px] font-semibold text-bone">
+            You&rsquo;re between squads.
+          </h1>
+          <p className="text-[15px] leading-relaxed text-ink-200/80">
+            We pair operatives at your intensity and time zone into squads of
+            five. Yours isn&rsquo;t formed yet. Until then, you&rsquo;ll land
+            in the Founders Circle — every man enlisted so far.
           </p>
           <a
-            href="/cycles"
-            className="mt-6 inline-flex items-center gap-2 bg-bone px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-ink-950 transition hover:bg-white"
+            href="/squads/founders-circle"
+            className="mt-3 inline-flex items-center gap-2 border border-white/15 bg-white/[0.03] px-4 py-2 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-bone transition hover:border-white/30 hover:bg-white/[0.06]"
           >
-            Find a squad
+            Enter Founders Circle
           </a>
         </div>
       </div>
@@ -326,13 +297,12 @@ function ChatBody() {
   return (
     <>
       <div className="flex min-h-0 flex-1">
-        {/* SQUAD RAIL — always visible on lg+, only on mobile when no squad selected */}
         <div
           className={`${showStream ? "hidden" : "flex"} w-full lg:flex lg:w-auto`}
         >
           <SquadList
             squads={squads}
-            activeCallsign={activeCallsign}
+            activeCallsign={activeHandle}
             onSelect={handleSelectSquad}
             lastMessageBy={railData.lastBy}
             unreadBy={railData.unreadBy}
@@ -340,20 +310,19 @@ function ChatBody() {
           />
         </div>
 
-        {/* STREAM + COMPOSER */}
-        {activeSquad ? (
+        {activeRow ? (
           <div
             className={`${
               showStream ? "flex" : "hidden lg:flex"
             } min-h-0 flex-1 flex-col`}
           >
             <ChatHeader
-              squadName={activeSquad.name}
-              callsign={activeSquad.callsign}
-              cycleCode={activeSquad.cycleCode}
-              cycleDay={activeSquad.cycleDay}
-              totalDays={activeSquad.totalDays}
-              intensity={activeSquad.intensity}
+              squadName={activeRow.name}
+              callsign={activeRow.handle.toUpperCase()}
+              cycleCode={activeRow.cycleCode ?? ""}
+              cycleDay={activeRow.cycleDay ?? 1}
+              totalDays={activeRow.totalDays ?? 0}
+              intensity="STEADY"
               onlineCount={onlineCount}
               totalCount={totalCount}
               onOpenCOC={() => setCocOpen(true)}
@@ -361,10 +330,11 @@ function ChatBody() {
             />
 
             {!cocAcked ? (
-              <div className="border-b border-ember-400/30 bg-ember-400/[0.05] px-5 py-2.5 md:px-10">
+              <div className="border-b border-white/[0.06] bg-white/[0.04] px-5 py-2.5 md:px-10">
                 <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-3">
-                  <p className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-ember-400/90">
-                    Squad chat &mdash; roast within reason. Read the bouncer rules.
+                  <p className="text-[12.5px] leading-snug text-bone/85">
+                    Squad chat &mdash; roast within reason. Read the bouncer
+                    rules.
                   </p>
                   <button
                     type="button"
@@ -377,14 +347,31 @@ function ChatBody() {
               </div>
             ) : null}
 
+            {sendError ? (
+              <div className="border-b border-red-500/30 bg-red-500/[0.06] px-5 py-2.5 md:px-10">
+                <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-3">
+                  <p className="font-mono text-[10.5px] uppercase tracking-[0.22em] text-red-300/90">
+                    {sendError}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setSendError(null)}
+                    className="font-mono text-[10.5px] font-bold uppercase tracking-[0.18em] text-bone/80 transition hover:text-bone"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
             <div className="flex min-h-0 flex-1">
               <div className="flex min-w-0 flex-1 flex-col">
                 <MessageList
                   messages={visibleMessages}
                   myHandle={myHandle}
                   reportedIds={reportedIds}
-                  cycleDay={activeSquad.cycleDay}
-                  roster={activeSquad.roster}
+                  cycleDay={activeRow.cycleDay ?? 1}
+                  roster={roster.map(toRosterMember)}
                   onReact={handleReact}
                   onReport={handleReport}
                   onBlock={handleBlock}
@@ -394,23 +381,23 @@ function ChatBody() {
                   onSend={handleSend}
                   onSendStamp={handleSendStamp}
                   recentByMe={recentByMe}
-                  squadName={activeSquad.name}
-                  callsign={activeSquad.callsign}
+                  squadName={activeRow.name}
+                  callsign={activeRow.handle.toUpperCase()}
                   onlineCount={onlineCount}
                   myName={myName}
                 />
               </div>
 
               <Roster
-                squadName={activeSquad.name}
-                callsign={activeSquad.callsign}
-                cycleCode={activeSquad.cycleCode}
-                cycleDay={activeSquad.cycleDay}
-                totalDays={activeSquad.totalDays}
-                intensity={activeSquad.intensity}
-                members={activeSquad.roster.filter(
-                  (m) => !blockedHandles.includes(m.handle),
-                )}
+                squadName={activeRow.name}
+                callsign={activeRow.handle.toUpperCase()}
+                cycleCode={activeRow.cycleCode ?? ""}
+                cycleDay={activeRow.cycleDay ?? 1}
+                totalDays={activeRow.totalDays ?? 0}
+                intensity="STEADY"
+                members={roster
+                  .filter((m) => !blockedHandles.includes(m.handle))
+                  .map(toRosterMember)}
                 myHandle={myHandle}
                 myName={myName}
               />
