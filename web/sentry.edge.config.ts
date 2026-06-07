@@ -10,8 +10,12 @@ const dsn = process.env.SENTRY_DSN;
 if (dsn) {
   Sentry.init({
     dsn,
-    environment: process.env.VERCEL_ENV ?? "development",
-    release: process.env.VERCEL_GIT_COMMIT_SHA,
+    environment:
+      process.env.VERCEL_ENV ??
+      process.env.RAILWAY_ENVIRONMENT_NAME ??
+      "development",
+    release:
+      process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.RAILWAY_GIT_COMMIT_SHA,
     tracesSampleRate: 0,
     sendDefaultPii: false,
     enableLogs: true,

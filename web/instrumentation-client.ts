@@ -17,8 +17,18 @@ const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
 if (dsn) {
   Sentry.init({
     dsn,
-    environment: process.env.NEXT_PUBLIC_VERCEL_ENV ?? process.env.NODE_ENV ?? "development",
-    release: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
+    // Railway exposes RAILWAY_* (not NEXT_PUBLIC_-prefixed), so the browser
+    // can't see them. To tag client release/env on Railway, set
+    // NEXT_PUBLIC_RAILWAY_* build vars (e.g. = ${{RAILWAY_GIT_COMMIT_SHA}}).
+    // Optional — untagged just means no release grouping in Sentry.
+    environment:
+      process.env.NEXT_PUBLIC_VERCEL_ENV ??
+      process.env.NEXT_PUBLIC_RAILWAY_ENVIRONMENT_NAME ??
+      process.env.NODE_ENV ??
+      "development",
+    release:
+      process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA ??
+      process.env.NEXT_PUBLIC_RAILWAY_GIT_COMMIT_SHA,
     tracesSampleRate: process.env.NODE_ENV === "production" ? 0.05 : 0,
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate: 0.1,
