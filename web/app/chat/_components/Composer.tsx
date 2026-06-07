@@ -80,10 +80,6 @@ export function Composer({
     }
   }
 
-  function handlePickStamp(stamp: Stamp) {
-    onSendStamp(stamp);
-  }
-
   function handlePickEmoji(glyph: string) {
     const el = taRef.current;
     if (!el) {
@@ -155,7 +151,7 @@ export function Composer({
             <Picker
               open={pickerOpen}
               onClose={() => setPickerOpen(false)}
-              onPickStamp={handlePickStamp}
+              onPickStamp={onSendStamp}
               onPickEmoji={handlePickEmoji}
             />
 

@@ -59,7 +59,16 @@ function CallbackInner() {
 
     const queryNext = searchParams.get("next");
     function destination(): string {
-      if (queryNext && queryNext.startsWith("/")) return queryNext;
+      // Open-redirect guard: only same-origin absolute paths. Reject
+      // protocol-relative ("//evil.com") and backslash ("/\evil.com")
+      // forms — browsers treat both as off-site navigations.
+      if (
+        queryNext &&
+        queryNext.startsWith("/") &&
+        !queryNext.startsWith("//") &&
+        !queryNext.startsWith("/\\")
+      )
+        return queryNext;
       // Password-reset links: the user still needs to choose a new password,
       // so route them back to sign-in with the reset banner showing.
       if (type === "recovery") return "/auth/sign-in?reset=1";

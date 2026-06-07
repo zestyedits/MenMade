@@ -14,15 +14,6 @@ export function useNow(intervalMs = 30_000) {
   return now;
 }
 
-export function formatLocalTime(d: Date | null) {
-  if (!d) return "--:--";
-  return d.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
-
 export function formatElapsed(fromIso: string, now: Date | null) {
   if (!now) return "0d 00h";
   const from = new Date(fromIso).getTime();
