@@ -47,6 +47,12 @@ const cspParts: string[] = [
   // challenges fall back to hooks.stripe.com. The billing portal is
   // separate (we redirect to billing.stripe.com — not framed).
   "frame-src https://js.stripe.com https://checkout.stripe.com https://hooks.stripe.com https://billing.stripe.com",
+  // Sentry's Session Replay integration compresses replay payloads in a
+  // Web Worker spun up from a blob: URL. Without an explicit worker-src,
+  // the browser falls back to script-src — which has no blob: source — and
+  // hard-blocks the worker (visible as a CSP violation in the console).
+  // 'self' covers Next.js's own workers; blob: covers Sentry's.
+  "worker-src 'self' blob:",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self' https://checkout.stripe.com",
@@ -76,6 +82,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Pin the workspace root to this directory. A stray package.json +
+  // lockfile at the monorepo root (/workspaces/MenMade) was making
+  // Turbopack infer the wrong root and walk the slow overlay filesystem,
+  // which is what drove the multi-second cold compiles in Codespaces.
+  turbopack: { root: __dirname },
   async headers() {
     return [
       {
