@@ -19,7 +19,7 @@ const steps = [
   {
     n: "03",
     title: "Show up. Get logged. Repeat.",
-    body: "Daily check-ins are 9 seconds. The ledger is public to your squad. Miss a day, the chat asks why &mdash; gently the first time.",
+    body: "Daily check-ins are 9 seconds. The ledger is public to your squad. Miss a day, the chat asks why — gently the first time.",
     detail: "Squad close rate: 87%",
   },
 ];
@@ -74,10 +74,9 @@ export function HowItWorks() {
                 <h3 className="font-sans text-[clamp(1.5rem,2.8vw,2.1rem)] font-medium leading-[1.08] tracking-[-0.02em] text-ink-950">
                   {s.title}
                 </h3>
-                <p
-                  className="mt-4 max-w-[58ch] text-[15px] leading-relaxed text-ink-700"
-                  dangerouslySetInnerHTML={{ __html: s.body }}
-                />
+                <p className="mt-4 max-w-[58ch] text-[15px] leading-relaxed text-ink-700">
+                  {s.body}
+                </p>
               </div>
 
               <div className="col-span-12 mt-4 md:col-span-3 md:mt-2">

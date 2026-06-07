@@ -94,10 +94,13 @@ export async function POST(request: NextRequest) {
       });
     }
     console.error("[billing/webhook] idempotency insert failed:", idemErr);
-    // Don't 500 — Stripe will retry and we'll keep failing. Better
-    // to acknowledge and emit a Sentry alert (TODO Phase 4).
+    // Transient insert failure (not a duplicate): the event was NOT
+    // recorded and the dispatch below never runs. Return 500 so Stripe
+    // retries — acknowledging with 200 here silently drops the event,
+    // which for checkout.session.completed means a paid customer never
+    // gets provisioned.
     return new Response(JSON.stringify({ ok: false }), {
-      status: 200,
+      status: 500,
       headers: { "content-type": "application/json" },
     });
   }
